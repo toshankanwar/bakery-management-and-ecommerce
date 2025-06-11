@@ -328,8 +328,8 @@ const Navbar = () => {
         </div>
 
         {/* Navigation Links */}
-        <div className="pt-8">
-          <div className="flex flex-col items-center space-y-6">
+        <div className="pt-1">
+          <div className="flex flex-col items-center space-y-1">
             <NavLink href="/">
               <span className="text-xl font-medium text-gray-800">Home</span>
             </NavLink>
@@ -346,8 +346,8 @@ const Navbar = () => {
                   <span className="text-xl font-medium text-gray-800">Login</span>
                 </NavLink>
                 <NavLink href="/signup">
-                  <span className="text-xl font-medium text-gray-800">Sign Up</span>
-                </NavLink>
+  <span className="w-full text-xl font-medium text-gray-800 block border-b border-gray-200 pb-4">Sign Up</span>
+</NavLink>
               </>
             )}
           </div>
