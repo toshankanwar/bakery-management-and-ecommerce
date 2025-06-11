@@ -215,7 +215,7 @@ const Navbar = () => {
                 </motion.span>
               </Link>
 
-              <div className="hidden md:flex items-center ml-10 space-x-8">
+              <div className="hidden md:flex items-center ml-10 space-x-4">
                 <NavLink href="/">Home</NavLink>
                 <NavLink href="/shop">Shop</NavLink>
                 <NavLink href="/contact">Contact</NavLink>
