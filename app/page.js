@@ -1,103 +1,314 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { motion } from 'framer-motion';
+import { useInView } from 'react-intersection-observer';
+import Image from 'next/image';
+import Link from 'next/link';
+import { 
+  ChevronRightIcon, 
+  StarIcon,
+  ArrowRightIcon,
+} from '@heroicons/react/24/outline';
+
+const HomePage = () => {
+  // Animation variants
+  const fadeInUp = {
+    initial: { opacity: 0, y: 60 },
+    animate: { opacity: 1, y: 0 }
+  };
+
+  const staggerContainer = {
+    animate: {
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  // Featured products data
+  const featuredProducts = [
+    {
+      id: 1,
+      name: 'Classic Croissant',
+      price: '$3.99',
+      image: '/croissant.jpg',
+      category: 'Pastries'
+    },
+    {
+      id: 2,
+      name: 'Chocolate Cake',
+      price: '$24.99',
+      image: '/chocolate-cake.jpg',
+      category: 'Cakes'
+    },
+    {
+      id: 3,
+      name: 'Sourdough Bread',
+      price: '$6.99',
+      image: '/sourdough.jpg',
+      category: 'Breads'
+    },
+    {
+      id: 4,
+      name: 'Fruit Tart',
+      price: '$4.99',
+      image: '/fruit-tart.jpg',
+      category: 'Desserts'
+    }
+  ];
+
+  // Testimonials data
+  const testimonials = [
+    {
+      id: 1,
+      name: 'Sarah Johnson',
+      role: 'Food Blogger',
+      content: 'The best bakery I have ever visited! Their croissants are simply amazing.',
+      rating: 5,
+      image: '/testimonial1.jpg'
+    },
+    {
+      id: 2,
+      name: 'Michael Chen',
+      role: 'Food Critic',
+      content: 'Exceptional quality and incredible attention to detail in every pastry.',
+      rating: 5,
+      image: '/testimonial2.jpg'
+    },
+    {
+      id: 3,
+      name: 'Emma Wilson',
+      role: 'Regular Customer',
+      content: 'Their cakes made our wedding day even more special. Highly recommend!',
+      rating: 5,
+      image: '/testimonial3.jpg'
+    }
+  ];
+
+  const [ref, inView] = useInView({
+    triggerOnce: true,
+    threshold: 0.1
+  });
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/hero-bakery.jpg"
+            alt="Bakery Hero"
+            fill
+            className="object-cover brightness-50"
+            priority
+          />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="relative z-10 text-center text-white px-4"
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          <h1 className="text-5xl md:text-7xl font-bold mb-6">
+            Sweet Delights Bakery
+          </h1>
+          <p className="text-xl md:text-2xl mb-8">
+            Artisanal breads & pastries baked fresh daily
+          </p>
+          <Link href="/shop">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="bg-green-600 text-white px-8 py-3 rounded-full text-lg font-medium hover:bg-green-700 transition-colors duration-200"
+            >
+              Explore Our Products
+            </motion.button>
+          </Link>
+        </motion.div>
+      </section>
+
+      {/* Featured Products Section */}
+      <section className="py-20 px-4 bg-gray-50">
+        <motion.div
+          ref={ref}
+          initial="initial"
+          animate={inView ? "animate" : "initial"}
+          variants={staggerContainer}
+          className="max-w-7xl mx-auto"
         >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          <motion.h2
+            variants={fadeInUp}
+            className="text-4xl font-bold text-center mb-12"
+          >
+            Featured Products
+          </motion.h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {featuredProducts.map((product) => (
+              <motion.div
+                key={product.id}
+                variants={fadeInUp}
+                whileHover={{ y: -10 }}
+                className="bg-white rounded-lg overflow-hidden shadow-lg"
+              >
+                <div className="relative h-64">
+                  <Image
+                    src={product.image}
+                    alt={product.name}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div className="p-6">
+                  <span className="text-green-600 text-sm font-medium">
+                    {product.category}
+                  </span>
+                  <h3 className="text-xl font-semibold mt-2">{product.name}</h3>
+                  <div className="flex justify-between items-center mt-4">
+                    <span className="text-2xl font-bold">{product.price}</span>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="bg-green-600 text-white p-2 rounded-full hover:bg-green-700 transition-colors duration-200"
+                    >
+                      <ChevronRightIcon className="h-6 w-6" />
+                    </motion.button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+
+      {/* About Section */}
+      <section className="py-20 px-4">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ duration: 0.8 }}
+            className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center"
+          >
+            <div className="relative h-[600px]">
+              <Image
+                src="/bakery-interior.jpg"
+                alt="Bakery Interior"
+                fill
+                className="object-cover rounded-lg"
+              />
+            </div>
+            <div>
+              <h2 className="text-4xl font-bold mb-6">Our Story</h2>
+              <p className="text-gray-600 mb-6 text-lg">
+                Since 1995, Sweet Delights has been crafting exceptional artisanal breads
+                and pastries. Our commitment to quality ingredients and traditional
+                baking methods has made us a beloved destination for food lovers.
+              </p>
+              <ul className="space-y-4 mb-8">
+                {['Artisanal Baking', 'Premium Ingredients', 'Traditional Methods'].map((item) => (
+                  <motion.li
+                    key={item}
+                    whileHover={{ x: 10 }}
+                    className="flex items-center space-x-3 text-lg"
+                  >
+                    <ArrowRightIcon className="h-5 w-5 text-green-600" />
+                    <span>{item}</span>
+                  </motion.li>
+                ))}
+              </ul>
+              <Link href="/about">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="bg-green-600 text-white px-8 py-3 rounded-full text-lg font-medium hover:bg-green-700 transition-colors duration-200"
+                >
+                  Learn More
+                </motion.button>
+              </Link>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="py-20 px-4 bg-gray-50">
+        <div className="max-w-7xl mx-auto">
+          <motion.h2
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ duration: 0.8 }}
+            className="text-4xl font-bold text-center mb-12"
+          >
+            What Our Customers Say
+          </motion.h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {testimonials.map((testimonial) => (
+              <motion.div
+                key={testimonial.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                whileHover={{ y: -10 }}
+                className="bg-white p-6 rounded-lg shadow-lg"
+              >
+                <div className="flex items-center space-x-4 mb-4">
+                  <Image
+                    src={testimonial.image}
+                    alt={testimonial.name}
+                    width={60}
+                    height={60}
+                    className="rounded-full"
+                  />
+                  <div>
+                    <h3 className="font-semibold">{testimonial.name}</h3>
+                    <p className="text-gray-600 text-sm">{testimonial.role}</p>
+                  </div>
+                </div>
+                <p className="text-gray-600 mb-4">{testimonial.content}</p>
+                <div className="flex space-x-1">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <StarIcon
+                      key={i}
+                      className="h-5 w-5 text-yellow-400 fill-current"
+                    />
+                  ))}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Newsletter Section */}
+      <section className="py-20 px-4">
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 0.8 }}
+          className="max-w-4xl mx-auto text-center"
         >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          <h2 className="text-4xl font-bold mb-6">Stay Updated</h2>
+          <p className="text-gray-600 mb-8">
+            Subscribe to our newsletter for special offers and updates
+          </p>
+          <form className="flex flex-col md:flex-row gap-4 justify-center">
+            <input
+              type="email"
+              placeholder="Enter your email"
+              className="px-6 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent md:w-96"
+            />
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="bg-green-600 text-white px-8 py-3 rounded-full text-lg font-medium hover:bg-green-700 transition-colors duration-200"
+            >
+              Subscribe
+            </motion.button>
+          </form>
+        </motion.div>
+      </section>
     </div>
   );
-}
+};
+
+export default HomePage;
