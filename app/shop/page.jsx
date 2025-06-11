@@ -189,7 +189,7 @@ const ShopPage = () => {
     show: { opacity: 1, y: 0 }
   };
   return (
-    <div className="min-h-screen bg-white">
+    <div className="max-h-screen bg-white">
       {/* Sticky Header */}
       <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm shadow-sm">
   <div className="max-w-7xl mx-auto">
