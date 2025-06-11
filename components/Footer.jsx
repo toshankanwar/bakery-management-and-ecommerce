@@ -51,7 +51,7 @@ const Footer = () => {
             <motion.div variants={itemVariants}>
               <Link href="/">
                 <span className="text-2xl font-bold bg-gradient-to-r from-green-600 to-yellow-500 bg-clip-text text-transparent">
-                  Sweet Delights
+                  Toshan Bakery
                 </span>
               </Link>
             </motion.div>
@@ -99,15 +99,15 @@ const Footer = () => {
             <motion.div variants={containerVariants} className="space-y-2">
               <motion.div variants={itemVariants} className="flex items-center text-gray-600">
                 <PhoneIcon className="h-5 w-5 mr-2" />
-                <span className="text-sm">+1 (555) 123-4567</span>
+                <span className="text-sm">+91 93*****93</span>
               </motion.div>
               <motion.div variants={itemVariants} className="flex items-center text-gray-600">
                 <EnvelopeIcon className="h-5 w-5 mr-2" />
-                <span className="text-sm">info@sweetdelights.com</span>
+                <span className="text-sm">contact@toshankanwar.website</span>
               </motion.div>
               <motion.div variants={itemVariants} className="flex items-center text-gray-600">
                 <MapPinIcon className="h-5 w-5 mr-2" />
-                <span className="text-sm">123 Baker Street, Sweetville</span>
+                <span className="text-sm">IIIT Naya Raipur Chhattisgarh India</span>
               </motion.div>
             </motion.div>
           </motion.div>
@@ -177,7 +177,7 @@ const Footer = () => {
               ))}
             </motion.div>
             <motion.p variants={itemVariants} className="text-sm text-gray-600">
-              © {currentYear} Sweet Delights. All rights reserved.
+              © {currentYear} Toshan Bakery. All rights reserved.
             </motion.p>
           </div>
         </motion.div>

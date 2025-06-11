@@ -268,21 +268,7 @@ const ShopPage = () => {
             </div>
 
             {/* Price Range */}
-            <div>
-              <h2 className="text-lg font-semibold mb-3">Price Range</h2>
-              <Slider
-                value={priceRange}
-                onChange={(_, newValue) => setPriceRange(newValue)}
-                valueLabelDisplay="auto"
-                min={stats.priceRange.min}
-                max={stats.priceRange.max}
-                className="text-green-600"
-              />
-              <div className="flex justify-between mt-2 text-sm text-gray-600">
-                <span>${priceRange[0]}</span>
-                <span>${priceRange[1]}</span>
-              </div>
-            </div>
+            
 
             {/* Availability */}
             <div>
@@ -391,22 +377,8 @@ const ShopPage = () => {
                     </div>
                   </div>
 
-                  {/* Mobile Price Range */}
-                  <div>
-                    <h2 className="text-lg font-semibold mb-3">Price Range</h2>
-                    <Slider
-                      value={priceRange}
-                      onChange={(_, newValue) => setPriceRange(newValue)}
-                      valueLabelDisplay="auto"
-                      min={stats.priceRange.min}
-                      max={stats.priceRange.max}
-                      className="text-green-600"
-                    />
-                    <div className="flex justify-between mt-2 text-sm text-gray-600">
-                      <span>${priceRange[0]}</span>
-                      <span>${priceRange[1]}</span>
-                    </div>
-                  </div>
+                  
+        
 
                   {/* Mobile Availability */}
                   <div>

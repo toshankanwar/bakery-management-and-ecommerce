@@ -171,7 +171,7 @@ const LoginPage = () => {
 
             <div className="text-sm">
               <Link
-                href="/forgot-password"
+                href="/forget-password"
                 className="font-medium text-green-600 hover:text-green-500 transition-colors"
               >
                 Forgot password?

@@ -43,9 +43,9 @@ const ContactPage = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          access_key: 'YOUR-WEB3FORMS-ACCESS-KEY', // Replace with your Web3Forms access key
+          access_key: '3246c9e3-95e7-454b-aecc-70c3488a3297', // Replace with your Web3Forms access key
           ...formData,
-          timestamp: '2025-06-11 18:45:36',
+          timestamp: '2025-06-11 19:11:52',
           user: 'Kala-bot-apk'
         }),
       });
@@ -67,7 +67,7 @@ const ContactPage = () => {
     } catch (err) {
       console.error('Error sending message:', {
         error: err.message,
-        timestamp: '2025-06-11 18:45:36',
+        timestamp: '2025-06-11 19:11:52',
         user: 'Kala-bot-apk'
       });
       showNotification('An unexpected error occurred');
@@ -176,7 +176,8 @@ const ContactPage = () => {
             </div>
           </div>
 
-          <div>
+          <div className="space-y-4">
+            {/* Form Submit Button */}
             <motion.button
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
@@ -212,6 +213,44 @@ const ContactPage = () => {
                 'Send Message'
               )}
             </motion.button>
+
+            {/* Divider */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">
+                  Or
+                </span>
+              </div>
+            </div>
+
+            {/* Direct Email Button */}
+            <motion.a
+              href={`mailto:contact@toshankanwar.website?subject=${encodeURIComponent(formData.subject || '')}&body=${encodeURIComponent(
+                `Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`
+              )}`}
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+              className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+            >
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                className="h-5 w-5 mr-2 text-gray-400" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" 
+                />
+              </svg>
+              Send Email directly to contact@toshankanwar.website
+            </motion.a>
           </div>
         </form>
 

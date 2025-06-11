@@ -93,24 +93,25 @@ const HomePage = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+      <section className="relative h-screen flex items-center justify-center overflow-hidden bg-green-50">
         <div className="absolute inset-0 z-0">
           <Image
             src="/hero-bakery.jpg"
             alt="Bakery Hero"
             fill
-            className="object-cover brightness-50"
+            className="object-cover opacity-90"
             priority
           />
+          <div className="absolute inset-0 bg-white/50" />
         </div>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="relative z-10 text-center text-white px-4"
+          className="relative z-10 text-center text-gray-800 px-4"
         >
           <h1 className="text-5xl md:text-7xl font-bold mb-6">
-            Sweet Delights Bakery
+            Toshan Bakery
           </h1>
           <p className="text-xl md:text-2xl mb-8">
             Artisanal breads & pastries baked fresh daily
@@ -128,7 +129,7 @@ const HomePage = () => {
       </section>
 
       {/* Featured Products Section */}
-      <section className="py-20 px-4 bg-gray-50">
+      <section className="py-20 px-4 bg-green-50">
         <motion.div
           ref={ref}
           initial="initial"
@@ -138,7 +139,7 @@ const HomePage = () => {
         >
           <motion.h2
             variants={fadeInUp}
-            className="text-4xl font-bold text-center mb-12"
+            className="text-4xl font-bold text-center mb-12 text-gray-800"
           >
             Featured Products
           </motion.h2>
@@ -162,9 +163,9 @@ const HomePage = () => {
                   <span className="text-green-600 text-sm font-medium">
                     {product.category}
                   </span>
-                  <h3 className="text-xl font-semibold mt-2">{product.name}</h3>
+                  <h3 className="text-xl font-semibold mt-2 text-gray-800">{product.name}</h3>
                   <div className="flex justify-between items-center mt-4">
-                    <span className="text-2xl font-bold">{product.price}</span>
+                    <span className="text-2xl font-bold text-gray-800">{product.price}</span>
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.95 }}
@@ -181,7 +182,7 @@ const HomePage = () => {
       </section>
 
       {/* About Section */}
-      <section className="py-20 px-4">
+      <section className="py-20 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0 }}
@@ -198,7 +199,7 @@ const HomePage = () => {
               />
             </div>
             <div>
-              <h2 className="text-4xl font-bold mb-6">Our Story</h2>
+              <h2 className="text-4xl font-bold mb-6 text-gray-800">Our Story</h2>
               <p className="text-gray-600 mb-6 text-lg">
                 Since 1995, Sweet Delights has been crafting exceptional artisanal breads
                 and pastries. Our commitment to quality ingredients and traditional
@@ -209,7 +210,7 @@ const HomePage = () => {
                   <motion.li
                     key={item}
                     whileHover={{ x: 10 }}
-                    className="flex items-center space-x-3 text-lg"
+                    className="flex items-center space-x-3 text-lg text-gray-700"
                   >
                     <ArrowRightIcon className="h-5 w-5 text-green-600" />
                     <span>{item}</span>
@@ -231,13 +232,13 @@ const HomePage = () => {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-20 px-4 bg-gray-50">
+      <section className="py-20 px-4 bg-green-50">
         <div className="max-w-7xl mx-auto">
           <motion.h2
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             transition={{ duration: 0.8 }}
-            className="text-4xl font-bold text-center mb-12"
+            className="text-4xl font-bold text-center mb-12 text-gray-800"
           >
             What Our Customers Say
           </motion.h2>
@@ -260,7 +261,7 @@ const HomePage = () => {
                     className="rounded-full"
                   />
                   <div>
-                    <h3 className="font-semibold">{testimonial.name}</h3>
+                    <h3 className="font-semibold text-gray-800">{testimonial.name}</h3>
                     <p className="text-gray-600 text-sm">{testimonial.role}</p>
                   </div>
                 </div>
@@ -280,14 +281,14 @@ const HomePage = () => {
       </section>
 
       {/* Newsletter Section */}
-      <section className="py-20 px-4">
+      <section className="py-20 px-4 bg-white">
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           transition={{ duration: 0.8 }}
           className="max-w-4xl mx-auto text-center"
         >
-          <h2 className="text-4xl font-bold mb-6">Stay Updated</h2>
+          <h2 className="text-4xl font-bold mb-6 text-gray-800">Stay Updated</h2>
           <p className="text-gray-600 mb-8">
             Subscribe to our newsletter for special offers and updates
           </p>
