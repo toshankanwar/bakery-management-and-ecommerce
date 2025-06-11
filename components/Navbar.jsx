@@ -159,7 +159,7 @@ const Navbar = () => {
         href={href}
         onClick={() => setIsOpen(false)}
         className={`${
-          isActive ? 'text-green-600' : 'text-gray-600'
+          isActive ? 'text-green-600' : 'text-black'
         } block px-6 py-3 text-lg font-medium hover:bg-green-50/50 transition-colors duration-200`}
       >
         {children}
