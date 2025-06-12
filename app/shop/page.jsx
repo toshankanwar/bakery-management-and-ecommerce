@@ -325,7 +325,7 @@ const ShopPage = () => {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'tween' }}
-              className="fixed inset-0 z-40 bg-white md:hidden"
+              className="fixed inset-0 z-90 bg-white md:hidden"
             >
               <div className="flex flex-col h-full">
                 <div className="flex items-center justify-between p-4 border-b">

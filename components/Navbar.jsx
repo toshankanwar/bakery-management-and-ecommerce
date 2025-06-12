@@ -223,7 +223,7 @@ const Navbar = () => {
             </div>
 
             {/* Right side */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3">
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
@@ -281,7 +281,7 @@ const Navbar = () => {
               {/* Mobile Menu Button */}
               <motion.button
                 onClick={() => setIsOpen(!isOpen)}
-                className="md:hidden text-gray-600 hover:text-green-600"
+                className="md:hidden text-gray-900 hover:text-green-600"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -346,7 +346,7 @@ const Navbar = () => {
                   <span className="text-xl font-medium text-gray-800">Login</span>
                 </NavLink>
                 <NavLink href="/signup">
-  <span className="w-full text-xl font-medium text-gray-800 block border-b border-gray-200 pb-4">Sign Up</span>
+  <span className="w-full text-xl font-medium text-gray-800 block pb-4">Sign Up</span>
 </NavLink>
               </>
             )}
