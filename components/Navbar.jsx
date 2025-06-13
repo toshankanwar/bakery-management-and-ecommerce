@@ -312,7 +312,7 @@ const Navbar = () => {
       animate={{ translateX: '0%' }}
       exit={{ translateX: '100%' }}
       transition={{ duration: 0.3 }}
-      className="fixed top-0 right-0 bottom-0 w-full bg-white z-50 md:hidden"
+      className="fixed top-0 right-0 bottom-0 w-full bg-white z-90 md:hidden"
     >
       <div className="flex flex-col h-full">
         {/* Close button at top */}

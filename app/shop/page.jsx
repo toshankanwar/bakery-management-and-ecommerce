@@ -340,11 +340,11 @@ const ShopPage = () => {
                 <div className="flex-1 overflow-y-auto p-4 space-y-6">
                   {/* Mobile Sort Options */}
                   <div>
-                    <h2 className="text-lg font-semibold mb-3">Sort By</h2>
+                    <h2 className="text-gray-900 font-semibold mb-3">Sort By</h2>
                     <select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
-                      className="w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-sm"
+                      className="w-full bg-white border border-gray-900 rounded-md px-3 py-2 text-sm"
                     >
                       {sortOptions.map(option => (
                         <option key={option.id} value={option.id}>
@@ -356,7 +356,7 @@ const ShopPage = () => {
 
                   {/* Mobile Categories */}
                   <div>
-                    <h2 className="text-lg font-semibold mb-3">Categories</h2>
+                    <h2 className="text-gray-900 font-semibold mb-3">Categories</h2>
                     <div className="space-y-1">
                       {categories.map((category) => (
                         <button
