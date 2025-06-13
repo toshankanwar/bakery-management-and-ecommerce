@@ -205,21 +205,39 @@ const Navbar = () => {
           <div className="flex justify-between items-center h-16">
             {/* Left side - Logo */}
             <div className="flex-1 flex items-center justify-start">
-              <Link href="/" className="flex-shrink-0">
-                <motion.span
-                  className="text-2xl font-bold bg-gradient-to-r from-green-600 to-yellow-500 bg-clip-text text-transparent"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Toshan Bakery
-                </motion.span>
-              </Link>
+            <Link href="/" className="flex-shrink-0">
+  <motion.span
+    className="text-xl font-bold bg-gradient-to-r from-green-600 to-yellow-500 bg-clip-text text-transparent"
+    whileHover={{ scale: 1.05 }}
+    whileTap={{ scale: 0.95 }}
+  >
+    Toshan Bakery
+  </motion.span>
+</Link>
 
-              <div className="hidden md:flex items-center ml-10 space-x-4">
-                <NavLink href="/">Home</NavLink>
-                <NavLink href="/shop">Shop</NavLink>
-                <NavLink href="/contact">Contact</NavLink>
-              </div>
+           {/* Center - Navigation Links */}
+           <div className="hidden md:block flex-1">
+  <div className="flex items-center justify-center space-x-6">
+    <NavLink 
+      href="/" 
+      className="text-sm font-normal text-gray-600 hover:text-green-600 transition-colors duration-200"
+    >
+      Home
+    </NavLink>
+    <NavLink 
+      href="/shop" 
+      className="text-sm font-normal text-gray-600 hover:text-green-600 transition-colors duration-200"
+    >
+      Shop
+    </NavLink>
+    <NavLink 
+      href="/contact" 
+      className="text-sm font-normal text-gray-600 hover:text-green-600 transition-colors duration-200"
+    >
+      Contact
+    </NavLink>
+  </div>
+</div>
             </div>
 
             {/* Right side */}
