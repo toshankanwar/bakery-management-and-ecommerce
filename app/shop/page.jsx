@@ -344,7 +344,7 @@ const ShopPage = () => {
                     <select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
-                      className="w-full bg-white border border-gray-900 rounded-md px-3 py-2 text-sm"
+                      className="w-full bg-white border border-gray-900 rounded-md px-3 py-2 text-gray-600"
                     >
                       {sortOptions.map(option => (
                         <option key={option.id} value={option.id}>
