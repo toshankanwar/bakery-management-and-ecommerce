@@ -321,7 +321,7 @@ const Navbar = () => {
             onClick={() => setIsOpen(false)}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
-            className="p-2 text-black-900 hover:text-gray-700 rounded-full font-black"
+            className="p-2 text-black-900 hover:text-gray-900 rounded-full font-black"
           >
             <XMarkIcon className="h-8 w-8" />
           </motion.button>

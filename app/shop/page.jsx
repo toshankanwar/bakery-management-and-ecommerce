@@ -189,7 +189,7 @@ const ShopPage = () => {
     show: { opacity: 1, y: 0 }
   };
   return (
-    <div className="max-h-screen bg-white">
+    <div className="min-h-screen bg-white">
       {/* Sticky Header */}
       <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm shadow-sm">
   <div className="max-w-7xl mx-auto">
@@ -198,11 +198,11 @@ const ShopPage = () => {
       <div className="flex items-center">
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="md:hidden mr-4 text-gray-500 hover:text-gray-700"
+          className="md:hidden mr-4 text-gray-800 hover:text-gray-700"
         >
           <Bars3Icon className="h-6 w-6" />
         </button>
-        <h1 className="text-xl font-bold text-gray-900">Our Products</h1>
+        <h1 className="text-xl font-bold text-gray-800">Our Products</h1>
       </div>
 
       {/* Desktop Sort Options */}
@@ -246,7 +246,7 @@ const ShopPage = () => {
       <div className="flex">
         {/* Desktop Sidebar */}
         <div className="hidden md:block max-w-[280px] h-[calc(100vh-4rem)] bg-white ">
-          <div className="sticky top-0 p-2 space-y-6">
+          <div className="sticky top-17 p-2 space-y-6">
             {/* Categories */}
             <div>
               <h2 className="text-lg font-semibold mb-3">Categories</h2>
@@ -329,10 +329,10 @@ const ShopPage = () => {
             >
               <div className="flex flex-col h-full">
                 <div className="flex items-center justify-between p-4 border-b">
-                  <h2 className="text-lg font-semibold">Menu & Filters</h2>
+                  <h2 className="text-gray-900 font-semibold">Menu & Filters</h2>
                   <button
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="text-gray-500"
+                    className="text-gray-900"
                   >
                     <XMarkIcon className="h-6 w-6" />
                   </button>
@@ -382,7 +382,7 @@ const ShopPage = () => {
 
                   {/* Mobile Availability */}
                   <div>
-                    <h2 className="text-lg font-semibold mb-3">Availability</h2>
+                    <h2 className="text-gray-900 font-semibold mb-3">Availability</h2>
                     <div className="space-y-1">
                       <button
                         onClick={() => {
@@ -432,7 +432,7 @@ const ShopPage = () => {
                       resetFilters();
                       setIsMobileMenuOpen(false);
                     }}
-                    className="w-full bg-gray-100 text-gray-600 px-3 py-2 rounded-md text-sm hover:bg-gray-200 transition-colors"
+                    className="w-full bg-gray-100 text-gray-900 px-3 py-2 rounded-md text-sm hover:bg-gray-200 transition-colors"
                   >
                     Reset Filters
                   </button>
@@ -444,105 +444,128 @@ const ShopPage = () => {
 
         {/* Products Grid */}
         <div className="flex-1 p-4">
-          {loading ? (
-            <div className="flex justify-center items-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-600"></div>
+  {loading ? (
+    <div className="flex justify-center items-center h-64">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-600"></div>
+    </div>
+  ) : (
+    <>
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+      >
+        {paginatedProducts.map((product) => (
+          <motion.div
+            key={product.id}
+            variants={itemVariants}
+            whileHover={{ 
+              y: -5,
+              transition: { duration: 0.2 }
+            }}
+            className="bg-white rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden"
+          >
+            <div className="relative h-56 overflow-hidden group">
+              <Image
+                src={product.imageUrl}
+                alt={product.name}
+                fill
+                className="object-cover rounded-t-lg transition-transform duration-300 group-hover:scale-110"
+              />
+              <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-300"/>
+              {!product.inStock && (
+                <div className="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-medium">
+                  Out of Stock
+                </div>
+              )}
+              {product.isNew && (
+                <div className="absolute top-2 left-2 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-medium">
+                  New
+                </div>
+              )}
             </div>
-          ) : (
-            <>
-              <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="show"
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+            <motion.div 
+              className="p-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.1 }}
+            >
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 hover:text-green-600 transition-colors duration-200">
+                    {product.name}
+                  </h3>
+                  <p className="text-sm text-gray-500">{product.category}</p>
+                </div>
+                <span className="text-lg font-bold text-green-600">
+                ₹ {product.price.toFixed(2)}
+                </span>
+              </div>
+              <p className="text-sm text-gray-600 mb-4 line-clamp-2 h-10">
+                {product.description}
+              </p>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => handleAddToCart(product)}
+                disabled={!product.inStock}
+                className={`w-full flex items-center justify-center space-x-2 px-4 py-2.5 rounded-md text-sm font-medium transform transition-all duration-200 ${
+                  product.inStock
+                    ? 'bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg'
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                }`}
               >
-                {paginatedProducts.map((product) => (
-                  <motion.div
-                    key={product.id}
-                    variants={itemVariants}
-                    className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
-                  >
-                    <div className="relative h-48">
-                      <Image
-                        src={product.imageUrl}
-                        alt={product.name}
-                        fill
-                        className="object-cover rounded-t-lg"
-                      />
-                      {!product.inStock && (
-                        <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-medium">
-                          Out of Stock
-                        </div>
-                      )}
-                      {product.isNew && (
-                        <div className="absolute top-2 left-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium">
-                          New
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900">{product.name}</h3>
-                          <p className="text-sm text-gray-500">{product.category}</p>
-                        </div>
-                        <span className="text-lg font-bold text-green-600">
-                          ${product.price.toFixed(2)}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-600 mb-4 line-clamp-2">{product.description}</p>
-                      <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => handleAddToCart(product)}
-                        disabled={!product.inStock}
-                        className={`w-full flex items-center justify-center space-x-2 px-4 py-2 rounded-md text-sm font-medium ${
-                          product.inStock
-                            ? 'bg-green-600 hover:bg-green-700 text-white'
-                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        } transition-colors duration-200`}
-                      >
-                        <ShoppingCartIcon className="h-4 w-4" />
-                        <span>{product.inStock ? 'Add to Cart' : 'Out of Stock'}</span>
-                      </motion.button>
-                    </div>
-                  </motion.div>
-                ))}
-              </motion.div>
+                <ShoppingCartIcon className="h-4 w-4" />
+                <span>{product.inStock ? 'Add to Cart' : 'Out of Stock'}</span>
+              </motion.button>
+            </motion.div>
+          </motion.div>
+        ))}
+      </motion.div>
 
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="mt-8 flex justify-center space-x-2">
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                    disabled={currentPage === 1}
-                    className="px-4 py-2 text-sm font-medium rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Previous
-                  </button>
-                  <span className="px-4 py-2 text-sm font-medium rounded-md bg-white border border-gray-300 text-gray-700">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                    disabled={currentPage === totalPages}
-                    className="px-4 py-2 text-sm font-medium rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Next
-                  </button>
-                </div>
-              )}
-
-              {/* Empty State */}
-              {!loading && filteredProducts.length === 0 && (
-                <div className="text-center py-12">
-                  <h3 className="text-lg font-medium text-gray-900">No products found</h3>
-                  <p className="mt-2 text-sm text-gray-500">Try adjusting your filters</p>
-                </div>
-              )}
-            </>
-          )}
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-8 flex justify-center space-x-2">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="px-4 py-2 text-sm font-medium rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow transition-all duration-200"
+          >
+            Previous
+          </motion.button>
+          <span className="px-4 py-2 text-sm font-medium rounded-md bg-white border border-gray-300 text-gray-700">
+            Page {currentPage} of {totalPages}
+          </span>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 text-sm font-medium rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow transition-all duration-200"
+          >
+            Next
+          </motion.button>
         </div>
+      )}
+
+      {/* Empty State */}
+      {!loading && filteredProducts.length === 0 && (
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="text-center py-12"
+        >
+          <h3 className="text-lg font-medium text-gray-900">No products found</h3>
+          <p className="mt-2 text-sm text-gray-500">Try adjusting your filters</p>
+        </motion.div>
+      )}
+    </>
+  )}
+</div>
       </div>
     </div>
   );
