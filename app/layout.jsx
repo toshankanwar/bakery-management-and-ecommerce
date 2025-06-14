@@ -4,6 +4,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { Toaster } from 'react-hot-toast';
+import MobileNav from '@/components/MobileNav';
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -67,6 +68,7 @@ export default function RootLayout({ children }) {
             {children}
           </main>
           <Footer />
+          <MobileNav />
         </AuthProvider>
       </body>
     </html>
