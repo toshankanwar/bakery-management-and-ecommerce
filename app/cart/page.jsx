@@ -26,6 +26,87 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 
+const DeliveryAlert = ({ cartItems }) => {
+  const [position, setPosition] = useState(-100);
+  const [showAlert, setShowAlert] = useState(true);
+  const [message] = useState(() => {
+    const messages = [
+      { text: "is flying off the shelves!", count: "3" },
+      { text: "is trending now!", count: "5" },
+      { text: "is in high demand!", count: "4" },
+      { text: "might sell out soon!", count: "6" }
+    ];
+    return messages[Math.floor(Math.random() * messages.length)];
+  });
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPosition(prev => {
+        if (prev > window.innerWidth) {
+          setShowAlert(false);
+          setTimeout(() => {
+            setPosition(-100);
+            setShowAlert(true);
+          }, 1000);
+          return -100;
+        }
+        return prev + 1;
+      });
+    }, 10);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <AnimatePresence>
+      {showAlert && cartItems.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="bg-amber-50 border-l-4 border-amber-500 p-4 mb-6 overflow-hidden"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex-1 flex items-center">
+              <div className="relative w-full h-6">
+                <motion.div
+                  style={{ x: position }}
+                  className="absolute flex items-center"
+                >
+                  <motion.div
+                    animate={{
+                      rotate: [0, 0, -5, 5, 0]
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity
+                    }}
+                    className="text-2xl"
+                  >
+                    🚚
+                  </motion.div>
+                  <motion.div
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="ml-3 bg-white px-4 py-1 rounded-full shadow-md"
+                  >
+                    <p className="text-sm text-amber-700">
+                      <span className="font-semibold">Hurry up!</span> {' '}
+                      {cartItems[0]?.name} {message.text} {' '}
+                      <span className="font-medium">{message.count} other people</span> have this in their cart
+                    </p>
+                  </motion.div>
+                </motion.div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
 const CartPage = () => {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +135,7 @@ const CartPage = () => {
     } catch (error) {
       console.error('Error fetching cart:', {
         error: error.message,
-        timestamp: '2025-06-13 17:20:13',
+        timestamp: '2025-06-14 02:41:14',
         user: 'Kala-bot-apk'
       });
       toast.error('Failed to load cart items');
@@ -85,12 +166,11 @@ const CartPage = () => {
             : item
         )
       );
-
       toast.success('Cart updated');
     } catch (error) {
       console.error('Error updating quantity:', {
         error: error.message,
-        timestamp: '2025-06-13 17:20:13',
+        timestamp: '2025-06-14 02:41:14',
         user: 'Kala-bot-apk'
       });
       toast.error('Failed to update quantity');
@@ -112,7 +192,7 @@ const CartPage = () => {
     } catch (error) {
       console.error('Error removing item:', {
         error: error.message,
-        timestamp: '2025-06-13 17:20:13',
+        timestamp: '2025-06-14 02:41:14',
         user: 'Kala-bot-apk'
       });
       toast.error('Failed to remove item');
@@ -122,9 +202,8 @@ const CartPage = () => {
   };
 
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const tax = subtotal * 0.05; // 5% tax
-  const shipping = subtotal > 1000 ? 0 : 50; // Free shipping over ₹1000
-  const total = subtotal + tax + shipping;
+  const shipping = subtotal >= 100 ? 0 : 10;
+  const total = subtotal + shipping;
 
   if (!user) {
     return (
@@ -162,6 +241,9 @@ const CartPage = () => {
           </Link>
         </div>
 
+        {/* Delivery Alert */}
+        {cartItems.length > 0 && <DeliveryAlert cartItems={cartItems} />}
+
         {loading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-600"></div>
@@ -197,68 +279,91 @@ const CartPage = () => {
                     className="bg-white rounded-lg shadow-sm p-4 sm:p-6 hover:shadow-md transition-shadow duration-200"
                   >
                     <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0">
-                      <div className="relative h-24 w-24 rounded-md overflow-hidden">
+                      {/* Image */}
+                      <div className="relative h-24 w-24 rounded-md overflow-hidden group">
                         <Image
-                          src={item.image}
+                          src={item.image || '/default-product.png'}
                           alt={item.name}
                           fill
-                          className="object-cover"
+                          sizes="96px"
+                          className="object-cover transition-transform duration-200 group-hover:scale-105"
+                          onError={(e) => {
+                            e.target.src = '/default-product.png';
+                          }}
                         />
                       </div>
-                      <div className="flex-1 sm:ml-6">
-                        <div className="flex justify-between">
+
+                      {/* Item Details */}
+                      <div className="flex-1 sm:ml-6 space-y-4">
+                        {/* Name and Remove Button */}
+                        <div className="flex justify-between items-start">
                           <div>
-                            <h3 className="text-lg font-semibold text-gray-900">{item.name}</h3>
-                            <p className="mt-1 text-sm text-gray-500">{item.category}</p>
-                          </div>
-                          <p className="text-lg font-semibold text-green-600">
-                            ₹{(item.price * item.quantity).toFixed(2)}
-                          </p>
-                        </div>
-                        <div className="mt-4 flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                              onClick={() => updateQuantity(item.id, Math.max(0, item.quantity - 1))}
-                              disabled={updating === item.id || item.quantity <= 1}
-                              className="p-1 rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
-                            >
-                              <MinusIcon className="h-4 w-4 text-gray-600" />
-                            </motion.button>
-                            <span className="w-8 text-center font-medium">
-                              {updating === item.id ? (
-                                <div className="h-4 w-4 mx-auto animate-spin rounded-full border-2 border-gray-300 border-t-green-600" />
-                              ) : (
-                                item.quantity
-                              )}
-                            </span>
-                            <motion.button
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.9 }}
-                              onClick={() => updateQuantity(item.id, Math.min(50, item.quantity + 1))}
-                              disabled={updating === item.id || item.quantity >= 50}
-                              className="p-1 rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
-                            >
-                              <PlusIcon className="h-4 w-4 text-gray-600" />
-                            </motion.button>
+                            <h3 className="text-lg font-semibold text-gray-900 hover:text-green-600 transition-colors duration-200">
+                              {item.name}
+                            </h3>
+                            <p className="mt-1 text-sm text-gray-500 capitalize">{item.category}</p>
                           </div>
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => removeItem(item.id)}
                             disabled={isDeleting === item.id}
-                            className="flex items-center text-sm font-medium text-red-600 hover:text-red-700"
+                            className="text-gray-400 hover:text-red-500 transition-colors duration-200"
                           >
                             {isDeleting === item.id ? (
-                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-300 border-t-red-600" />
+                              <div className="h-5 w-5 animate-spin rounded-full border-2 border-red-300 border-t-red-600" />
                             ) : (
-                              <>
-                                <TrashIcon className="h-4 w-4 mr-1" />
-                                Remove
-                              </>
+                              <XMarkIcon className="h-5 w-5" />
                             )}
                           </motion.button>
+                        </div>
+
+                        {/* Price and Quantity Controls */}
+                        <div className="flex items-center justify-between flex-wrap gap-4">
+                          <div className="flex items-center space-x-4">
+                            <span className="text-sm text-gray-500">Price:</span>
+                            <span className="font-medium">₹{item.price.toFixed(2)}</span>
+                          </div>
+
+                          <div className="flex items-center space-x-2">
+                            <span className="text-sm text-gray-500">Quantity:</span>
+                            <div className="flex items-center bg-gray-50 rounded-lg border border-gray-200">
+                              <motion.button
+                                whileHover={{ backgroundColor: '#f3f4f6' }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                                disabled={updating === item.id || item.quantity <= 1}
+                                className="px-2 py-1 text-gray-600 hover:text-gray-800 disabled:opacity-50"
+                              >
+                                <MinusIcon className="h-4 w-4" />
+                              </motion.button>
+                              
+                              <span className="w-8 text-center font-medium text-gray-900">
+                                {updating === item.id ? (
+                                  <div className="h-4 w-4 mx-auto animate-spin rounded-full border-2 border-gray-300 border-t-green-600" />
+                                ) : (
+                                  item.quantity
+                                )}
+                              </span>
+
+                              <motion.button
+                                whileHover={{ backgroundColor: '#f3f4f6' }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => updateQuantity(item.id, Math.min(50, item.quantity + 1))}
+                                disabled={updating === item.id || item.quantity >= 50}
+                                className="px-2 py-1 text-gray-600 hover:text-gray-800 disabled:opacity-50"
+                              >
+                                <PlusIcon className="h-4 w-4" />
+                              </motion.button>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center space-x-4">
+                            <span className="text-sm text-gray-500">Total:</span>
+                            <span className="font-semibold text-green-600">
+                              ₹{(item.price * item.quantity).toFixed(2)}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -281,27 +386,41 @@ const CartPage = () => {
                     <span className="font-medium">₹{subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Tax (5%)</span>
-                    <span className="font-medium">₹{tax.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Shipping</span>
                     <span className="font-medium">
-                      {shipping === 0 ? 'Free' : `₹${shipping.toFixed(2)}`}
+                      {subtotal >= 100 ? (
+                        <span className="text-green-600">Free</span>
+                      ) : (
+                        `₹10.00`
+                      )}
                     </span>
                   </div>
                   <div className="border-t border-gray-200 pt-3 mt-3">
                     <div className="flex justify-between items-center">
                       <span className="text-base font-semibold text-gray-900">Total</span>
-                      <span className="text-xl font-bold text-green-600">₹{total.toFixed(2)}</span>
+                      <span className="text-xl font-bold text-green-600">
+                        ₹{(subtotal + (subtotal >= 100 ? 0 : 10)).toFixed(2)}
+                      </span>
                     </div>
                   </div>
                 </div>
-                {shipping > 0 && (
-                  <p className="mt-3 text-sm text-gray-500">
-                    Add ₹{(100 - subtotal).toFixed(2)} more for free shipping
-                  </p>
+
+                {subtotal < 100 && (
+                  <div className="mt-3">
+                    <div className="w-full bg-gray-100 rounded-full h-2">
+                      <motion.div 
+                        className="bg-green-600 h-2 rounded-full"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${Math.min(100, (subtotal/100) * 100)}%` }}
+                        transition={{ duration: 0.5 }}
+                      />
+                    </div>
+                    <p className="mt-2 text-sm text-gray-500">
+                      Add ₹{(100 - subtotal).toFixed(2)} more for free shipping
+                    </p>
+                  </div>
                 )}
+
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}

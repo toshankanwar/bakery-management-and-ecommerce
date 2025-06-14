@@ -18,12 +18,14 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { logoutUser } from '@/firebase/auth';
+import useCartItemCount from '@/hooks/useCartItemCount';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const pathname = usePathname();
   const { user, loading } = useAuthContext();
+  const itemCount = useCartItemCount();
 
   // Handle scroll lock when mobile menu is open
   useEffect(() => {
@@ -251,17 +253,26 @@ const Navbar = () => {
               </motion.button>
 
               <Link href="/cart">
-                <motion.div
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="relative text-gray-600 hover:text-green-600"
-                >
-                  <ShoppingCartIcon className="h-6 w-6" />
-                  <span className="absolute -top-2 -right-2 bg-green-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                    0
-                  </span>
-                </motion.div>
-              </Link>
+      <motion.div
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.95 }}
+        className="relative text-gray-600 hover:text-green-600"
+      >
+        <ShoppingCartIcon className="h-6 w-6" />
+        <AnimatePresence>
+          {itemCount > 0 && (
+            <motion.span
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0 }}
+              className="absolute -top-2 -right-2 bg-green-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium"
+            >
+              {itemCount}
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </Link>
 
               {/* Auth Section */}
               {!loading && (
