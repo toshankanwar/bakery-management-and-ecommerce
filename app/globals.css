@@ -18,6 +18,16 @@
     --foreground: #ededed;
   }
 }
+@layer components {
+  .aspect-w-1 {
+    position: relative;
+    padding-bottom: 100%;
+  }
+  
+  .aspect-h-1 {
+    position: relative;
+  }
+}
 
 body {
   background: var(--background);

@@ -152,17 +152,7 @@ const Navbar = () => {
             </motion.div>
           </Link>
 
-          <Link href="/settings">
-            <motion.div
-              whileHover={{ backgroundColor: '#f0fdf4' }}
-              className="px-4 py-2.5 text-sm text-gray-700 hover:text-green-600 flex items-center space-x-3"
-            >
-              <Cog6ToothIcon className="h-5 w-5" />
-              <span>Settings</span>
-            </motion.div>
-          </Link>
-
-          <Link href="/reset-password">
+          <Link href="/forget-password">
             <motion.div
               whileHover={{ backgroundColor: '#f0fdf4' }}
               className="px-4 py-2.5 text-sm text-gray-700 hover:text-green-600 flex items-center space-x-3 border-b border-gray-200"
@@ -262,6 +252,7 @@ const Navbar = () => {
                 <div className="flex items-center justify-center space-x-6">
                   <NavLink href="/">Home</NavLink>
                   <NavLink href="/shop">Shop</NavLink>
+                  <NavLink href="/about">About</NavLink>
                   <NavLink href="/contact">Contact</NavLink>
                 </div>
               </div>
@@ -358,11 +349,7 @@ const Navbar = () => {
             </div>
           </div>
 
-          {/* Mobile Menu - Slides from right */}
-          {/* Mobile Menu - Slides from left */}
-{/* Mobile Menu - Slides from left */}
-{/* Mobile Menu */}
-{/* Mobile Menu */}
+         
 {/* Mobile Menu - Slides from left */}
 <AnimatePresence>
   {isOpen && (
@@ -417,9 +404,11 @@ const Navbar = () => {
               {[
                 { name: 'Home', href: '/', icon: HomeIcon },
                 { name: 'Shop', href: '/shop', icon: ShoppingBagIcon },
+                { name: 'About', href: '/about', icon: ShoppingBagIcon },
+                { name: 'Contact', href: '/contact', icon: ShoppingBagIcon },
                 { name: 'Search', href: '/search', icon: MagnifyingGlassIcon },
-                { name: 'Profile', href: user ? '/profile' : '/login', icon: UserIcon },
                 { name: 'Cart', href: '/cart', icon: ShoppingCartIcon },
+                { name: 'Profile', href: user ? '/profile' : '/login', icon: UserIcon },
               ].map((item) => {
                 const isActive = pathname === item.href;
                 return (

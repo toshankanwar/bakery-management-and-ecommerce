@@ -16,7 +16,10 @@ import {
   InformationCircleIcon,
   ArrowRightOnRectangleIcon,
   ArrowLeftOnRectangleIcon,
-  UserCircleIcon
+  UserCircleIcon,
+  HeartIcon,
+  KeyIcon,
+  ClipboardDocumentListIcon
 } from '@heroicons/react/24/outline';
 import { 
   HomeIcon as HomeIconSolid,
@@ -28,6 +31,7 @@ import {
 import { useAuthContext } from '@/contexts/AuthContext';
 import { db } from '@/firebase/config';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { logoutUser } from '@/firebase/auth';
 
 const MenuDrawer = ({ isOpen, onClose, user }) => {
   const pathname = usePathname();
@@ -35,11 +39,8 @@ const MenuDrawer = ({ isOpen, onClose, user }) => {
   const menuItems = [
     { name: 'Home', path: '/', icon: HomeIcon },
     { name: 'Shop', path: '/shop', icon: ShoppingCartIcon },
-    { name: 'Contact', path: '/contact', icon: PhoneIcon },
     { name: 'About', path: '/about', icon: InformationCircleIcon },
-    user 
-      ? { name: 'Profile', path: '/profile', icon: UserCircleIcon }
-      : { name: 'Login', path: '/login', icon: ArrowRightOnRectangleIcon }
+    { name: 'Contact', path: '/contact', icon: PhoneIcon },
   ];
 
   return (
@@ -108,8 +109,16 @@ const MenuDrawer = ({ isOpen, onClose, user }) => {
                   </div>
                   <button
                     onClick={() => {
-                      // Add your logout logic here
-                      onClose();
+                      try {
+                        logoutUser();
+                        onClose();
+                      } catch (error) {
+                        console.error('Error logging out:', {
+                          error: error.message,
+                          timestamp: '2025-06-15 06:07:22',
+                          user: 'Kala-bot-apk'
+                        });
+                      }
                     }}
                     className="flex items-center space-x-2 text-red-600 hover:text-red-700 transition-colors"
                   >
@@ -135,13 +144,113 @@ const MenuDrawer = ({ isOpen, onClose, user }) => {
   );
 };
 
+const AccountDrawer = ({ isOpen, onClose, user }) => {
+  const accountMenuItems = [
+    { name: 'Profile', path: '/profile', icon: UserIcon },
+    { name: 'My Orders', path: '/orders', icon: ClipboardDocumentListIcon },
+    { name: 'Wishlist', path: '/wishlist', icon: HeartIcon },
+    { name: 'Reset Password', path: '/reset-password', icon: KeyIcon },
+  ];
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.5 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/50 z-[51]"
+          />
+          <motion.div
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            className="fixed top-0 right-0 h-full w-[75%] bg-white shadow-xl z-[52]"
+          >
+            <div className="flex flex-col h-full">
+              <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                <h2 className="text-xl font-semibold text-gray-900">Account</h2>
+                <button
+                  onClick={onClose}
+                  className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <XMarkIcon className="h-6 w-6 text-gray-600" />
+                </button>
+              </div>
+
+              {user && (
+                <div className="p-4 border-b border-gray-200">
+                  <div className="flex items-center space-x-3">
+                    <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
+                      {user.photoURL ? (
+                        <img src={user.photoURL} alt="" className="h-12 w-12 rounded-full" />
+                      ) : (
+                        <UserCircleIcon className="h-8 w-8 text-green-600" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">{user.email}</p>
+                      <p className="text-sm text-gray-500">Logged in</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex-1 overflow-y-auto">
+                <div className="py-4">
+                  {accountMenuItems.map((item) => (
+                    <Link
+                      key={item.name}
+                      href={item.path}
+                      onClick={onClose}
+                      className="flex items-center px-6 py-4 space-x-4 transition-colors text-gray-700 hover:bg-gray-50"
+                    >
+                      <item.icon className="h-6 w-6" />
+                      <span className="font-medium">{item.name}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-4 border-t border-gray-200">
+                <button
+                  onClick={async () => {
+                    try {
+                      await logoutUser();
+                      onClose();
+                    } catch (error) {
+                      console.error('Error logging out:', {
+                        error: error.message,
+                        timestamp: '2025-06-15 06:07:22',
+                        user: 'Kala-bot-apk'
+                      });
+                    }
+                  }}
+                  className="w-full flex items-center justify-center space-x-2 px-6 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                  <ArrowRightOnRectangleIcon className="h-6 w-6" />
+                  <span className="font-medium">Logout</span>
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+};
+
 const MobileNav = () => {
   const pathname = usePathname();
   const { user } = useAuthContext();
   const [cartCount, setCartCount] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAccountOpen, setIsAccountOpen] = useState(false);
 
-  // Navigation items (updated without Menu link)
+  // Navigation items
   const navItems = [
     {
       name: 'Home',
@@ -162,8 +271,9 @@ const MobileNav = () => {
       activeIcon: Bars3IconSolid
     },
     {
-      name: 'Profile',
-      path: user ? '/profile' : '/login',
+      name: 'Account',
+      action: user ? () => setIsAccountOpen(true) : undefined,
+      path: user ? undefined : '/login',
       icon: UserIcon,
       activeIcon: UserIconSolid
     },
@@ -212,7 +322,7 @@ const MobileNav = () => {
 
   // Lock body scroll when menu is open
   useEffect(() => {
-    if (isMenuOpen) {
+    if (isMenuOpen || isAccountOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -220,7 +330,7 @@ const MobileNav = () => {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isMenuOpen]);
+  }, [isMenuOpen, isAccountOpen]);
 
   return (
     <>
@@ -228,6 +338,13 @@ const MobileNav = () => {
       <MenuDrawer 
         isOpen={isMenuOpen} 
         onClose={() => setIsMenuOpen(false)}
+        user={user}
+      />
+
+      {/* Account Drawer */}
+      <AccountDrawer 
+        isOpen={isAccountOpen}
+        onClose={() => setIsAccountOpen(false)}
         user={user}
       />
 
