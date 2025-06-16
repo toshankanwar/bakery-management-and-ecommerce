@@ -369,7 +369,7 @@ const CheckoutPage = () => {
       }
       
       setShowUPIModal(false);
-      router.push('/order');
+      router.push('/orders');
       toast.success('Payment successful! Order placed.');
     } catch (error) {
       console.error('Error processing payment completion:', error);
