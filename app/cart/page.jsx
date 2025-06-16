@@ -8,7 +8,8 @@ import {
   PlusIcon, 
   ShoppingBagIcon,
   ArrowLeftIcon,
-  XMarkIcon
+  XMarkIcon,
+  PencilIcon
 } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -20,11 +21,13 @@ import {
   doc, 
   updateDoc, 
   deleteDoc, 
-  where 
+  where,
+  setDoc
 } from 'firebase/firestore';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import PageWrapper from '@/components/PageWrapper';
 
 const DeliveryAlert = ({ cartItems }) => {
   const [position, setPosition] = useState(-100);
@@ -112,6 +115,7 @@ const CartPage = () => {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(null);
   const [isDeleting, setIsDeleting] = useState(null);
+  const [editingRequest, setEditingRequest] = useState({});
   const { user } = useAuthContext();
   const router = useRouter();
 
@@ -128,14 +132,15 @@ const CartPage = () => {
       
       const items = snapshot.docs.map(doc => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
+        specialRequest: doc.data().specialRequest || ''
       }));
 
       setCartItems(items);
     } catch (error) {
       console.error('Error fetching cart:', {
         error: error.message,
-        timestamp: '2025-06-14 02:41:14',
+        timestamp: '2025-06-16 16:39:55',
         user: 'Kala-bot-apk'
       });
       toast.error('Failed to load cart items');
@@ -156,7 +161,7 @@ const CartPage = () => {
       const itemRef = doc(db, 'carts', user.uid, 'items', itemId);
       await updateDoc(itemRef, {
         quantity: newQuantity,
-        updatedAt: new Date()
+        updatedAt: new Date().toISOString()
       });
 
       setCartItems(prev => 
@@ -170,10 +175,45 @@ const CartPage = () => {
     } catch (error) {
       console.error('Error updating quantity:', {
         error: error.message,
-        timestamp: '2025-06-14 02:41:14',
+        timestamp: '2025-06-16 16:39:55',
         user: 'Kala-bot-apk'
       });
       toast.error('Failed to update quantity');
+    } finally {
+      setUpdating(null);
+    }
+  };
+
+  const updateSpecialRequest = async (itemId, request) => {
+    if (!user) return;
+    
+    setUpdating(itemId);
+    try {
+      const itemRef = doc(db, 'carts', user.uid, 'items', itemId);
+      await updateDoc(itemRef, {
+        specialRequest: request,
+        updatedAt: new Date().toISOString()
+      });
+
+      setCartItems(prev => 
+        prev.map(item => 
+          item.id === itemId 
+            ? { ...item, specialRequest: request }
+            : item
+        )
+      );
+      setEditingRequest(prev => ({
+        ...prev,
+        [itemId]: false
+      }));
+      toast.success('Special request updated');
+    } catch (error) {
+      console.error('Error updating special request:', {
+        error: error.message,
+        timestamp: '2025-06-16 16:39:55',
+        user: 'Kala-bot-apk'
+      });
+      toast.error('Failed to update special request');
     } finally {
       setUpdating(null);
     }
@@ -192,7 +232,7 @@ const CartPage = () => {
     } catch (error) {
       console.error('Error removing item:', {
         error: error.message,
-        timestamp: '2025-06-14 02:41:14',
+        timestamp: '2025-06-16 16:39:55',
         user: 'Kala-bot-apk'
       });
       toast.error('Failed to remove item');
@@ -228,6 +268,7 @@ const CartPage = () => {
   }
 
   return (
+    <PageWrapper>
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between mb-8">
@@ -365,6 +406,77 @@ const CartPage = () => {
                             </span>
                           </div>
                         </div>
+
+                        {/* Special Request Section */}
+                        <div className="mt-4 border-t pt-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium text-gray-700">Special Request</span>
+                            {!editingRequest[item.id] && (
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => setEditingRequest(prev => ({ ...prev, [item.id]: true }))}
+                                className="text-green-600 hover:text-green-700"
+                              >
+                                <PencilIcon className="h-4 w-4" />
+                              </motion.button>
+                            )}
+                          </div>
+                          {editingRequest[item.id] ? (
+                            <div className="space-y-2">
+                              <textarea
+                                value={item.specialRequest}
+                                onChange={(e) => {
+                                  const newRequest = e.target.value;
+                                  if (newRequest.length <= 200) {
+                                    setCartItems(prev =>
+                                      prev.map(cartItem =>
+                                        cartItem.id === item.id
+                                          ? { ...cartItem, specialRequest: newRequest }
+                                          : cartItem
+                                      )
+                                    );
+                                  }
+                                }}
+                                placeholder="Add any special instructions (e.g., allergies, preferences)"
+                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
+                                rows={3}
+                              />
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-500">
+                                  {200 - (item.specialRequest?.length || 0)} characters remaining
+                                </span>
+                                <div className="space-x-2">
+                                  <button
+                                    onClick={() => {
+                                      setEditingRequest(prev => ({ ...prev, [item.id]: false }));
+                                      setCartItems(prev =>
+                                        prev.map(cartItem =>
+                                          cartItem.id === item.id
+                                            ? { ...cartItem, specialRequest: cartItem.specialRequest || '' }
+                                            : cartItem
+                                        )
+                                      );
+                                    }}
+                                    className="px-3 py-1 text-sm text-gray-600 hover:text-gray-700"
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    onClick={() => updateSpecialRequest(item.id, item.specialRequest)}
+                                    className="px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700"
+                                  >
+                                    Save
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="text-sm text-gray-600">
+                              {item.specialRequest || 'No special instructions added'}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </motion.div>
@@ -399,7 +511,7 @@ const CartPage = () => {
                     <div className="flex justify-between items-center">
                       <span className="text-base font-semibold text-gray-900">Total</span>
                       <span className="text-xl font-bold text-green-600">
-                        ₹{(subtotal + (subtotal >= 100 ? 0 : 10)).toFixed(2)}
+                        ₹{total.toFixed(2)}
                       </span>
                     </div>
                   </div>
@@ -435,6 +547,7 @@ const CartPage = () => {
         )}
       </div>
     </div>
+    </PageWrapper>
   );
 };
 
