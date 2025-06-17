@@ -247,23 +247,27 @@ const CartPage = () => {
 
   if (!user) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center"
+      <div className="min-h-screen w-full bg-white flex flex-col items-center justify-center px-4 sm:min-h-[60vh]">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center w-full max-w-md bg-white p-6 sm:p-8 rounded-lg"
+      >
+        <ShoppingBagIcon className="h-12 w-12 sm:h-16 sm:w-16 mx-auto text-gray-400 mb-4" />
+        <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2">
+          Please login to view your cart
+        </h2>
+        <p className="text-sm sm:text-base text-gray-600 mb-6">
+          Sign in to access your shopping cart and checkout
+        </p>
+        <Link 
+          href="/login"
+          className="inline-flex items-center px-6 py-3 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors duration-200"
         >
-          <ShoppingBagIcon className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-          <h2 className="text-2xl font-semibold text-gray-900 mb-2">Please login to view your cart</h2>
-          <p className="text-gray-600 mb-6">Sign in to access your shopping cart and checkout</p>
-          <Link 
-            href="/login"
-            className="inline-flex items-center px-6 py-3 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors duration-200"
-          >
-            Sign In
-          </Link>
-        </motion.div>
-      </div>
+          Sign In
+        </Link>
+      </motion.div>
+    </div>
     );
   }
 
@@ -363,7 +367,7 @@ const CartPage = () => {
                         <div className="flex items-center justify-between flex-wrap gap-4">
                           <div className="flex items-center space-x-4">
                             <span className="text-sm text-gray-500">Price:</span>
-                            <span className="font-medium">₹{item.price.toFixed(2)}</span>
+                            <span className="font-medium text-gray-900">₹{item.price.toFixed(2)}</span>
                           </div>
 
                           <div className="flex items-center space-x-2">
@@ -439,7 +443,7 @@ const CartPage = () => {
                                   }
                                 }}
                                 placeholder="Add any special instructions (e.g., allergies, preferences)"
-                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
+                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
                                 rows={3}
                               />
                               <div className="flex items-center justify-between">
@@ -495,11 +499,11 @@ const CartPage = () => {
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Subtotal</span>
-                    <span className="font-medium">₹{subtotal.toFixed(2)}</span>
+                    <span className="font-medium text-gray-900">₹{subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Shipping</span>
-                    <span className="font-medium">
+                    <span className="font-medium text-gray-900">
                       {subtotal >= 100 ? (
                         <span className="text-green-600">Free</span>
                       ) : (
