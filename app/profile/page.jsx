@@ -249,7 +249,7 @@ const ProfilePage = () => {
                           name="displayName"
                           value={profileData.displayName}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900"
                           placeholder="Your full name"
                         />
                       </div>
@@ -264,7 +264,7 @@ const ProfilePage = () => {
                           value={profileData.mobile}
                           onChange={handleInputChange}
                           maxLength={10}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900"
                           placeholder="10-digit mobile number"
                         />
                       </div>
@@ -277,7 +277,7 @@ const ProfilePage = () => {
                           name="state"
                           value={profileData.state}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900"
                         >
                           <option value="">Select your state</option>
                           {indianStates.map(state => (
@@ -295,7 +295,7 @@ const ProfilePage = () => {
                           name="city"
                           value={profileData.city}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900"
                           placeholder="Your city"
                         />
                       </div>
@@ -309,7 +309,7 @@ const ProfilePage = () => {
                           name="address"
                           value={profileData.address}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900"
                           placeholder="Street address"
                         />
                       </div>
@@ -323,7 +323,7 @@ const ProfilePage = () => {
                           name="apartment"
                           value={profileData.apartment}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900"
                           placeholder="Apartment, suite, etc."
                         />
                       </div>
@@ -338,7 +338,7 @@ const ProfilePage = () => {
                           value={profileData.pincode}
                           onChange={handleInputChange}
                           maxLength={6}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900"
                           placeholder="6-digit PIN code"
                         />
                       </div>
@@ -352,7 +352,7 @@ const ProfilePage = () => {
                           value={profileData.bio}
                           onChange={handleInputChange}
                           rows={3}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900"
                           placeholder="Tell us about yourself"
                         />
                       </div>

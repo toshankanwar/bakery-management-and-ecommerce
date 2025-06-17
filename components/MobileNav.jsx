@@ -149,7 +149,7 @@ const AccountDrawer = ({ isOpen, onClose, user }) => {
     { name: 'Profile', path: '/profile', icon: UserIcon },
     { name: 'My Orders', path: '/orders', icon: ClipboardDocumentListIcon },
     { name: 'Wishlist', path: '/wishlist', icon: HeartIcon },
-    { name: 'Reset Password', path: '/reset-password', icon: KeyIcon },
+    { name: 'Reset Password', path: '/forget-password', icon: KeyIcon },
   ];
 
   return (
