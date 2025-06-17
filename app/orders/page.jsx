@@ -255,7 +255,7 @@ const OrderCard = ({ order, isExpanded, onToggle, onDownloadInvoice }) => {
                         </span>
                       </div>
                       <div className="flex justify-between pt-2 border-t font-medium">
-                        <span>Total</span>
+                        <span className="font-medium text-gray-900">Total</span>
                         <span className="text-green-600">
                           ₹{order.total.toFixed(2)}
                         </span>
@@ -488,7 +488,7 @@ const OrdersPage = () => {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500"
+            className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 text-gray-900"
           >
             <option value="all">All Orders</option>
             {Object.entries(ORDER_STATUS_CONFIG).map(([status, config]) => (
