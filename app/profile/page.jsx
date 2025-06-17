@@ -406,7 +406,7 @@ const ProfilePage = () => {
                           <UserIcon className="h-5 w-5 text-gray-400" />
                           <div>
                             <p className="text-sm text-gray-500">Full Name</p>
-                            <p className="font-medium">{profileData.displayName}</p>
+                            <p className="font-medium text-gray-900">{profileData.displayName}</p>
                           </div>
                         </div>
 
@@ -414,7 +414,7 @@ const ProfilePage = () => {
                           <EnvelopeIcon className="h-5 w-5 text-gray-400" />
                           <div>
                             <p className="text-sm text-gray-500">Email</p>
-                            <p className="font-medium">{profileData.email}</p>
+                            <p className="font-medium text-gray-900">{profileData.email}</p>
                           </div>
                         </div>
 
@@ -423,7 +423,7 @@ const ProfilePage = () => {
                             <PhoneIcon className="h-5 w-5 text-gray-400" />
                             <div>
                               <p className="text-sm text-gray-500">Mobile</p>
-                              <p className="font-medium">{profileData.mobile}</p>
+                              <p className="font-medium text-gray-900">{profileData.mobile}</p>
                             </div>
                           </div>
                         )}
@@ -435,7 +435,7 @@ const ProfilePage = () => {
                             <GlobeAltIcon className="h-5 w-5 text-gray-400" />
                             <div>
                               <p className="text-sm text-gray-500">Location</p>
-                              <p className="font-medium">
+                              <p className="font-medium text-gray-900">
                                 {[profileData.city, profileData.state]
                                   .filter(Boolean)
                                   .join(', ')}
@@ -449,7 +449,7 @@ const ProfilePage = () => {
                             <MapPinIcon className="h-5 w-5 text-gray-400 mt-0.5" />
                             <div>
                               <p className="text-sm text-gray-500">Address</p>
-                              <p className="font-medium">
+                              <p className="font-medium text-gray-900">
                                 {profileData.address}
                                 {profileData.apartment && (
                                   <>, {profileData.apartment}</>
