@@ -228,7 +228,7 @@ const OrderCard = ({ order, isExpanded, onToggle, onDownloadInvoice }) => {
                     <div className="text-sm space-y-2">
                       <div className="flex justify-between">
                         <span className="text-gray-600">Payment Method</span>
-                        <span className="font-medium">
+                        <span className="font-medium text-gray-900">
                           {order.paymentMethod === 'COD' ? 'Cash on Delivery' : 'UPI Payment'}
                         </span>
                       </div>
@@ -242,11 +242,11 @@ const OrderCard = ({ order, isExpanded, onToggle, onDownloadInvoice }) => {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Subtotal</span>
-                        <span>₹{order.subtotal.toFixed(2)}</span>
+                        <span className="font-medium text-gray-900">₹{order.subtotal.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Shipping</span>
-                        <span>
+                        <span className="font-medium text-gray-900">
                           {order.shipping === 0 ? (
                             <span className="text-green-600">Free</span>
                           ) : (
