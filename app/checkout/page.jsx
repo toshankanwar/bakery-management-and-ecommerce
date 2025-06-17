@@ -423,7 +423,7 @@ const CheckoutPage = () => {
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900"
                   placeholder="Enter your full name"
                   required
                 />
@@ -439,7 +439,7 @@ const CheckoutPage = () => {
                   value={formData.mobile}
                   onChange={handleInputChange}
                   maxLength={10}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900"
                   placeholder="10-digit mobile number"
                   required
                 />
@@ -454,7 +454,7 @@ const CheckoutPage = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-900"
                   readOnly
                 />
               </div>
@@ -467,7 +467,7 @@ const CheckoutPage = () => {
                   name="state"
                   value={formData.state}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900"
                   required
                 >
                   <option value="">Select your state</option>
@@ -486,7 +486,7 @@ const CheckoutPage = () => {
                   name="city"
                   value={formData.city}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900"
                   placeholder="Enter your city"
                   required
                 />
@@ -502,7 +502,7 @@ const CheckoutPage = () => {
                   value={formData.pincode}
                   onChange={handleInputChange}
                   maxLength={6}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900"
                   placeholder="6-digit PIN code"
                   required
                 />
@@ -517,7 +517,7 @@ const CheckoutPage = () => {
                   name="address"
                   value={formData.address}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900"
                   placeholder="House number and street name"
                   required
                 />
@@ -532,7 +532,7 @@ const CheckoutPage = () => {
                   name="apartment"
                   value={formData.apartment}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900"
                   placeholder="Apartment, suite, unit, etc."
                 />
               </div>
@@ -623,11 +623,11 @@ const CheckoutPage = () => {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Subtotal</span>
-                  <span className="font-medium">₹{subtotal.toFixed(2)}</span>
+                  <span className="font-medium text-gray-900">₹{subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Shipping</span>
-                  <span className="font-medium">
+                  <span className="font-medium text-gray-900">
                     {shipping === 0 ? (
                       <span className="text-green-600">Free</span>
                     ) : (
