@@ -130,7 +130,7 @@ const Footer = () => {
               <input
                 type="email"
                 placeholder="Enter your email"
-                className="w-full px-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+                className="w-full px-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent text-gray-900"
               />
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -176,9 +176,51 @@ const Footer = () => {
                 </motion.a>
               ))}
             </motion.div>
-            <motion.p variants={itemVariants} className="text-sm text-gray-600">
-              © {currentYear} Toshan Bakery. All rights reserved.
-            </motion.p>
+            <motion.p variants={itemVariants} className="text-sm text-gray-600 flex flex-col sm:flex-row items-center justify-center gap-1 text-center">
+  <span className="flex flex-wrap items-center justify-center gap-1">
+    Designed & Developed with{" "}
+    <svg 
+      className="w-4 h-4 mx-1 text-red-500 animate-pulse" 
+      fill="currentColor" 
+      viewBox="0 0 24 24"
+    >
+      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+    </svg>
+    by{" "}
+    <a 
+      href="https://toshankanwar.website" 
+      target="_blank" 
+      rel="noopener noreferrer" 
+      className="font-medium text-green-600 hover:text-green-700 transition-colors hover:underline"
+    >
+      Toshan Kanwar
+    </a>
+  </span>
+  <span className="text-xs text-gray-500 mt-1 sm:mt-0">
+    <span className="hidden sm:inline mx-1">•</span>
+    Built with{" "}
+    <a 
+      href="https://nextjs.org" 
+      target="_blank" 
+      rel="noopener noreferrer" 
+      className="text-gray-600 hover:text-gray-800 transition-colors"
+    >
+      Next.js
+    </a>
+    {" 13 "}+{" and "}
+    <a 
+      href="https://firebase.google.com" 
+      target="_blank" 
+      rel="noopener noreferrer" 
+      className="text-gray-600 hover:text-gray-800 transition-colors"
+    >
+      Firebase
+    </a>
+    {" "}• Mobile First • Responsive
+  </span>
+  <span className="hidden sm:inline mx-1">•</span>
+  <span>© {currentYear} Toshan Bakery. All rights reserved.</span>
+</motion.p>
           </div>
         </motion.div>
       </div>
