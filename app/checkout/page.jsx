@@ -338,7 +338,7 @@ const CheckoutPage = () => {
         );
         await Promise.all(deletePromises);
         
-        router.push('/order');
+        router.push('/orders');
         toast.success('Order placed successfully!');
       }
     } catch (error) {

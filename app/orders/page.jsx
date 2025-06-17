@@ -29,6 +29,7 @@ import {
   PhoneIcon,
   BanknotesIcon
 } from '@heroicons/react/24/outline';
+import html2pdf from 'html2pdf.js';
 
 const ORDER_STATUS_CONFIG = {
   pending: {
@@ -344,88 +345,107 @@ const OrdersPage = () => {
     setPage(prev => prev + 1);
   };
 
-  const generateInvoice = (order) => {
+  const generateInvoice = async (order) => {
     try {
+      // Create the invoice HTML content
       const invoiceHtml = `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>Invoice - Order #${order.id}</title>
-            <style>
-              body { font-family: Arial, sans-serif; padding: 20px; }
-              .invoice-header { text-align: center; margin-bottom: 30px; }
-              .order-info { margin-bottom: 20px; }
-              .address-section { margin-bottom: 20px; }
-              .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-              .items-table th, .items-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-              .total-section { text-align: right; }
-            </style>
-          </head>
-          <body>
-            <div class="invoice-header">
-              <h1>Invoice</h1>
-              <p>Order #${order.id}</p>
-              <p>Date: ${new Date(order.createdAt).toLocaleString()}</p>
+        <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #1a1a1a; margin-bottom: 10px;">INVOICE</h1>
+            <p style="color: #666; margin: 5px 0;">Order #${order.id}</p>
+            <p style="color: #666; margin: 5px 0;">Date: ${new Date(order.createdAt).toLocaleString()}</p>
+          </div>
+          
+          <div style="margin-bottom: 30px; padding: 15px; background-color: #f9fafb; border-radius: 8px;">
+            <h3 style="color: #1a1a1a; margin-bottom: 10px;">Order Status: ${ORDER_STATUS_CONFIG[order.orderStatus].text}</h3>
+            <p style="color: #4b5563; margin: 5px 0;">Payment Method: ${order.paymentMethod === 'COD' ? 'Cash on Delivery' : 'UPI Payment'}</p>
+            <p style="color: #4b5563; margin: 5px 0;">Payment Status: ${PAYMENT_STATUS_CONFIG[order.paymentStatus].text}</p>
+          </div>
+  
+          <div style="margin-bottom: 30px;">
+            <h3 style="color: #1a1a1a; margin-bottom: 10px;">Shipping Address:</h3>
+            <div style="padding: 15px; background-color: #f9fafb; border-radius: 8px;">
+              <p style="color: #4b5563; margin: 5px 0; font-weight: bold;">${order.address.name}</p>
+              <p style="color: #4b5563; margin: 5px 0;">${order.address.address}</p>
+              ${order.address.apartment ? `<p style="color: #4b5563; margin: 5px 0;">${order.address.apartment}</p>` : ''}
+              <p style="color: #4b5563; margin: 5px 0;">${order.address.city}, ${order.address.state} ${order.address.pincode}</p>
+              <p style="color: #4b5563; margin: 5px 0;">Phone: ${order.address.mobile}</p>
             </div>
-            
-            <div class="order-info">
-              <h3>Order Status: ${ORDER_STATUS_CONFIG[order.orderStatus].text}</h3>
-              <p>Payment Method: ${order.paymentMethod === 'COD' ? 'Cash on Delivery' : 'UPI Payment'}</p>
-              <p>Payment Status: ${PAYMENT_STATUS_CONFIG[order.paymentStatus].text}</p>
-            </div>
-
-            <div class="address-section">
-              <h3>Shipping Address:</h3>
-              <p>${order.address.name}</p>
-              <p>${order.address.address}</p>
-              ${order.address.apartment ? `<p>${order.address.apartment}</p>` : ''}
-              <p>${order.address.city}, ${order.address.state} ${order.address.pincode}</p>
-              <p>Phone: ${order.address.mobile}</p>
-            </div>
-
-            <table class="items-table">
-              <thead>
+          </div>
+  
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+            <thead>
+              <tr style="background-color: #f3f4f6;">
+                <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb;">Item</th>
+                <th style="padding: 12px; text-align: center; border-bottom: 2px solid #e5e7eb;">Quantity</th>
+                <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e5e7eb;">Price</th>
+                <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e5e7eb;">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${order.items.map(item => `
                 <tr>
-                  <th>Item</th>
-                  <th>Quantity</th>
-                  <th>Price</th>
-                  <th>Total</th>
+                  <td style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb;">${item.name}</td>
+                  <td style="padding: 12px; text-align: center; border-bottom: 1px solid #e5e7eb;">${item.quantity}</td>
+                  <td style="padding: 12px; text-align: right; border-bottom: 1px solid #e5e7eb;">₹${item.price.toFixed(2)}</td>
+                  <td style="padding: 12px; text-align: right; border-bottom: 1px solid #e5e7eb;">₹${(item.price * item.quantity).toFixed(2)}</td>
                 </tr>
-              </thead>
-              <tbody>
-                ${order.items.map(item => `
-                  <tr>
-                    <td>${item.name}</td>
-                    <td>${item.quantity}</td>
-                    <td>₹${item.price.toFixed(2)}</td>
-                    <td>₹${(item.price * item.quantity).toFixed(2)}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-
-            <div class="total-section">
-              <p>Subtotal: ₹${order.subtotal.toFixed(2)}</p>
-              <p>Shipping: ${order.shipping === 0 ? 'Free' : `₹${order.shipping.toFixed(2)}`}</p>
-              <h3>Total: ₹${order.total.toFixed(2)}</h3>
-            </div>
-          </body>
-        </html>
+              `).join('')}
+            </tbody>
+          </table>
+  
+          <div style="text-align: right; margin-top: 20px; padding: 20px; background-color: #f9fafb; border-radius: 8px;">
+            <p style="color: #4b5563; margin: 5px 0;">Subtotal: ₹${order.subtotal.toFixed(2)}</p>
+            <p style="color: #4b5563; margin: 5px 0;">Shipping: ${order.shipping === 0 ? 'Free' : `₹${order.shipping.toFixed(2)}`}</p>
+            <h3 style="color: #1a1a1a; margin: 10px 0;">Total: ₹${order.total.toFixed(2)}</h3>
+          </div>
+  
+          <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+            <p style="color: #6b7280; font-size: 14px;">Thank you for your purchase!</p>
+            <p style="color: #6b7280; font-size: 14px;">
+              Generated on ${new Date().toLocaleString()} by ${order.storeName || 'Toshan Kanwar'}
+            </p>
+          </div>
+        </div>
       `;
-
-      const blob = new Blob([invoiceHtml], { type: 'text/html' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `invoice-${order.id}.html`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-      
-      toast.success('Invoice downloaded successfully');
+  
+      // Create an element to render the invoice
+      const element = document.createElement('div');
+      element.innerHTML = invoiceHtml;
+  
+      // Configure pdf options
+      const opt = {
+        margin: [10, 10],
+        filename: `invoice-${order.id}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+          scale: 2,
+          useCORS: true,
+          logging: false
+        },
+        jsPDF: { 
+          unit: 'mm', 
+          format: 'a4', 
+          orientation: 'portrait'
+        }
+      };
+  
+      // Generate PDF
+      toast.promise(
+        html2pdf().set(opt).from(element).save(),
+        {
+          pending: 'Generating invoice...',
+          success: 'Invoice downloaded successfully',
+          error: 'Failed to generate invoice'
+        }
+      );
+  
     } catch (error) {
-      console.error('Error generating invoice:', error);
+      console.error('Error generating invoice:', {
+        error: error.message,
+        timestamp: '2025-06-17 17:55:22',
+        user: 'Kala-bot-apk'
+      });
       toast.error('Failed to generate invoice');
     }
   };
