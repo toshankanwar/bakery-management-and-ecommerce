@@ -379,7 +379,7 @@ const HomePage = () => {
                 Our Quality Promise
               </h2>
               <p className="text-gray-600 mb-6">
-                At Toshan Bakery, we're committed to using only the finest ingredients
+                At Toshan Bakery, we are committed to using only the finest ingredients
                 and traditional baking methods to create products that delight our
                 customers every day.
               </p>
@@ -424,7 +424,7 @@ const HomePage = () => {
             What Our Customers Say
           </h2>
           <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
-            Don't just take our word for it – hear from our valued customers
+            Dont just take our word for it – hear from our valued customers
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
@@ -436,7 +436,7 @@ const HomePage = () => {
                 transition={{ delay: index * 0.1 }}
                 className="bg-white p-6 rounded-xl shadow-sm hover:shadow-xl border border-gray-100 hover:border-green-200 transition-all duration-300"
               >
-                <p className="text-gray-600 mb-6 italic">"{testimonial.text}"</p>
+                <p className="text-gray-600 mb-6 italic">{testimonial.text}</p>
                 <div>
                   <p className="font-semibold text-gray-900">{testimonial.author}</p>
                   <p className="text-sm text-gray-500">{testimonial.role}</p>
