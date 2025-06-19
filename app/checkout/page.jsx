@@ -1,4 +1,3 @@
-// app/checkout/page.jsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -16,126 +15,20 @@ import {
   doc,
   deleteDoc, 
   where,
-  getDoc,
-  updateDoc 
+  getDoc
 } from 'firebase/firestore';
 import { toast } from 'react-hot-toast';
 import { 
-  MapPinIcon,
-  PhoneIcon,
-  CreditCardIcon,
-  CashIcon,
   QrCodeIcon,
-  ChevronRightIcon,
-  ShoppingBagIcon,
   XMarkIcon,
-  CheckIcon,
-  XCircleIcon
 } from '@heroicons/react/24/outline';
 
 const indianStates = [
-  'Andhra Pradesh',
-  'Arunachal Pradesh',
-  'Assam',
-  'Bihar',
-  'Chhattisgarh',
-  'Goa',
-  'Gujarat',
-  'Haryana',
-  'Himachal Pradesh',
-  'Jharkhand',
-  'Karnataka',
-  'Kerala',
-  'Madhya Pradesh',
-  'Maharashtra',
-  'Manipur',
-  'Meghalaya',
-  'Mizoram',
-  'Nagaland',
-  'Odisha',
-  'Punjab',
-  'Rajasthan',
-  'Sikkim',
-  'Tamil Nadu',
-  'Telangana',
-  'Tripura',
-  'Uttar Pradesh',
-  'Uttarakhand',
-  'West Bengal',
-  'Andaman and Nicobar Islands',
-  'Chandigarh',
-  'Dadra and Nagar Haveli and Daman and Diu',
-  'Delhi',
-  'Jammu and Kashmir',
-  'Ladakh',
-  'Lakshadweep',
-  'Puducherry'
+  'Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal','Andaman and Nicobar Islands','Chandigarh','Dadra and Nagar Haveli and Daman and Diu','Delhi','Jammu and Kashmir','Ladakh','Lakshadweep','Puducherry'
 ].sort();
 
-const UPIPaymentModal = ({ isOpen, onClose, orderId, amount, onPaymentComplete }) => {
-  const [qrCode, setQrCode] = useState('');
-  const [paymentStatus, setPaymentStatus] = useState('pending');
-  const [checking, setChecking] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes
-
-  useEffect(() => {
-    if (isOpen) {
-      const upiId = 'toshankanwar3@okicici';
-      const upiUrl = `upi://pay?pa=${upiId}&pn=Toshan Bakery&tr=${orderId}&am=${amount}&cu=INR`;
-      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(upiUrl)}&size=200x200`;
-      setQrCode(qrUrl);
-
-      const checkInterval = setInterval(() => {
-        checkPaymentStatus(orderId);
-      }, 5000);
-
-      const timerInterval = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            clearInterval(checkInterval);
-            clearInterval(timerInterval);
-            onClose();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      return () => {
-        clearInterval(checkInterval);
-        clearInterval(timerInterval);
-      };
-    }
-  }, [isOpen, orderId, amount]);
-
-  const checkPaymentStatus = async (orderId) => {
-    try {
-      setChecking(true);
-      const orderRef = doc(db, 'orders', orderId);
-      const orderSnap = await getDoc(orderRef);
-      
-      if (orderSnap.exists()) {
-        const orderData = orderSnap.data();
-        if (orderData.paymentStatus === 'completed') {
-          setPaymentStatus('completed');
-          setTimeout(onPaymentComplete, 1500);
-        } else if (orderData.paymentStatus === 'failed') {
-          setPaymentStatus('failed');
-        }
-      }
-    } catch (error) {
-      console.error('Error checking payment:', {
-        error: error.message,
-        timestamp: '2025-06-16 18:24:30',
-        user: 'Kala-bot-apk'
-      });
-    } finally {
-      setChecking(false);
-    }
-  };
-
+const UPIPaymentModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <motion.div
@@ -152,57 +45,19 @@ const UPIPaymentModal = ({ isOpen, onClose, orderId, amount, onPaymentComplete }
         </button>
 
         <div className="text-center">
-          <QrCodeIcon className="h-8 w-8 mx-auto text-green-600 mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Scan & Pay</h3>
-          <p className="text-sm text-gray-600 mb-4">
-            Amount to Pay: ₹{amount.toFixed(2)}
+          <QrCodeIcon className="h-8 w-8 mx-auto text-yellow-600 mb-4" />
+          <h3 className="text-lg font-semibold mb-2 text-yellow-700">UPI Not Available</h3>
+          <p className="text-sm text-yellow-700 mb-4">
+            UPI payment is currently <span className="font-semibold">not enabled</span>.<br />
+            Please use <span className="font-semibold">Cash on Delivery</span> to prevent any loss. <br />
+            We are working on enabling UPI soon. Thank you for your patience!
           </p>
-          
-          {qrCode && (
-            <div className="flex justify-center mb-4">
-              <div className="relative border-2 border-green-600 rounded-lg p-2">
-                <Image
-                  src={qrCode}
-                  alt="Payment QR Code"
-                  width={200}
-                  height={200}
-                  className="rounded-lg"
-                />
-              </div>
-            </div>
-          )}
-
-          <div className="space-y-4">
-            {paymentStatus === 'pending' && (
-              <div>
-                <div className="text-sm text-yellow-600 animate-pulse">
-                  Waiting for payment...
-                </div>
-                <div className="mt-2 text-sm text-gray-500">
-                  Time remaining: {Math.floor(timeLeft / 60)}:
-                  {(timeLeft % 60).toString().padStart(2, '0')}
-                </div>
-              </div>
-            )}
-
-            {paymentStatus === 'completed' && (
-              <div className="text-sm text-green-600">
-                <CheckIcon className="h-6 w-6 mx-auto mb-2" />
-                Payment successful! Redirecting...
-              </div>
-            )}
-
-            {paymentStatus === 'failed' && (
-              <div className="text-sm text-red-600">
-                <XCircleIcon className="h-6 w-6 mx-auto mb-2" />
-                Payment failed. Please try again.
-              </div>
-            )}
-
-            <div className="text-xs text-gray-500 mt-4">
-              Note: Please don't close this window while payment is processing
-            </div>
-          </div>
+          <motion.button
+            onClick={onClose}
+            className="mt-2 bg-green-600 text-white px-5 py-2 rounded-lg font-medium hover:bg-green-700"
+          >
+            Close
+          </motion.button>
         </div>
       </motion.div>
     </div>
@@ -215,7 +70,6 @@ const CheckoutPage = () => {
   const [loading, setLoading] = useState(true);
   const [cartItems, setCartItems] = useState([]);
   const [showUPIModal, setShowUPIModal] = useState(false);
-  const [currentOrderId, setCurrentOrderId] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     mobile: '',
@@ -225,7 +79,9 @@ const CheckoutPage = () => {
     address: '',
     apartment: '',
     pincode: '',
-    paymentMethod: 'COD'
+    paymentMethod: 'COD',
+    deliveryType: 'today',
+    deliveryDate: '',
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -240,7 +96,6 @@ const CheckoutPage = () => {
         const cartRef = collection(db, 'carts', user.uid, 'items');
         const q = query(cartRef, where('quantity', '>', 0));
         const snapshot = await getDocs(q);
-        
         const items = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
@@ -253,11 +108,7 @@ const CheckoutPage = () => {
 
         setCartItems(items);
       } catch (error) {
-        console.error('Error fetching cart:', {
-          error: error.message,
-          timestamp: '2025-06-16 18:24:30',
-          user: 'Kala-bot-apk'
-        });
+        console.error('Error fetching cart:', error);
         toast.error('Failed to load cart items');
       } finally {
         setLoading(false);
@@ -274,6 +125,13 @@ const CheckoutPage = () => {
       [name]: value
     }));
   };
+
+  // For delivery date, auto-set to empty if type is today
+  useEffect(() => {
+    if (formData.deliveryType === "today") {
+      setFormData(prev => ({ ...prev, deliveryDate: '' }));
+    }
+  }, [formData.deliveryType]);
 
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const shipping = subtotal >= 100 ? 0 : 10;
@@ -295,17 +153,55 @@ const CheckoutPage = () => {
       return false;
     }
 
+    if (formData.deliveryType === "choose" && !formData.deliveryDate) {
+      toast.error('Please choose a delivery date');
+      return false;
+    }
+
     return true;
+  };
+
+  // Check bakery stock for all items and return {ok: boolean, unavailable: [{item, available}]}
+  const checkBakeryStock = async () => {
+    let unavailable = [];
+    for (const item of cartItems) {
+      const prodRef = doc(db, 'bakeryItems', item.productId || item.id);
+      const snap = await getDoc(prodRef);
+      if (!snap.exists()) {
+        unavailable.push({ item, available: 0 });
+      } else {
+        const prod = snap.data();
+        const available = prod.quantity ?? 0;
+        if (item.quantity > available) {
+          unavailable.push({ item, available });
+        }
+      }
+    }
+    return {
+      ok: unavailable.length === 0,
+      unavailable
+    };
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!validateForm()) return;
-    
     setSubmitting(true);
     try {
-      const orderRef = await addDoc(collection(db, 'orders'), {
+      // Check bakery item availability first
+      const { ok, unavailable } = await checkBakeryStock();
+      if (!ok) {
+        unavailable.forEach(({ item, available }) => {
+          toast.error(
+            `${item.name} only has ${available} in stock. Please adjust your cart.`
+          );
+        });
+        setSubmitting(false);
+        return;
+      }
+
+      // Prepare orderData with only valid fields for Firestore rules
+      const orderData = {
         userId: user.uid,
         userEmail: user.email,
         items: cartItems,
@@ -326,70 +222,34 @@ const CheckoutPage = () => {
         shipping,
         total,
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      });
+        updatedAt: new Date().toISOString(),
+        deliveryType: formData.deliveryType
+      };
+
+      // Only include deliveryDate if deliveryType is 'choose'
+      if (formData.deliveryType === "choose") {
+        orderData.deliveryDate = formData.deliveryDate;
+      }
+
+      await addDoc(collection(db, 'orders'), orderData);
 
       if (formData.paymentMethod === 'UPI') {
-        setCurrentOrderId(orderRef.id);
         setShowUPIModal(true);
       } else {
+        // Remove cart items
         const deletePromises = cartItems.map(item => 
           deleteDoc(doc(db, 'carts', user.uid, 'items', item.id))
         );
         await Promise.all(deletePromises);
-        
+
         router.push('/orders');
         toast.success('Order placed successfully!');
       }
     } catch (error) {
-      console.error('Error creating order:', {
-        error: error.message,
-        timestamp: '2025-06-16 18:24:30',
-        user: 'Kala-bot-apk'
-      });
+      console.error('Error creating order:', error, JSON.stringify(error));
       toast.error('Failed to place order');
     } finally {
       setSubmitting(false);
-    }
-  };
-
-  const handlePaymentComplete = async () => {
-    try {
-      if (currentOrderId) {
-        await updateDoc(doc(db, 'orders', currentOrderId), {
-          orderStatus: 'confirmed',
-          paymentStatus: 'completed',
-          updatedAt: new Date().toISOString()
-        });
-
-        const deletePromises = cartItems.map(item => 
-          deleteDoc(doc(db, 'carts', user.uid, 'items', item.id))
-        );
-        await Promise.all(deletePromises);
-      }
-      
-      setShowUPIModal(false);
-      router.push('/orders');
-      toast.success('Payment successful! Order placed.');
-    } catch (error) {
-      console.error('Error processing payment completion:', error);
-      toast.error('Error completing order');
-    }
-  };
-
-  const handlePaymentCancel = async () => {
-    try {
-      if (currentOrderId) {
-        await updateDoc(doc(db, 'orders', currentOrderId), {
-          orderStatus: 'cancelled',
-          paymentStatus: 'failed',
-          updatedAt: new Date().toISOString()
-        });
-      }
-      setShowUPIModal(false);
-      toast.error('Payment cancelled. Please try again after some time.');
-    } catch (error) {
-      console.error('Error cancelling payment:', error);
     }
   };
 
@@ -400,6 +260,9 @@ const CheckoutPage = () => {
       </div>
     );
   }
+
+  // Date for delivery min (today)
+  const minDate = new Date().toISOString().slice(0,10);
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -539,6 +402,46 @@ const CheckoutPage = () => {
             </div>
           </div>
 
+          {/* Delivery Time */}
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Delivery Time
+            </h2>
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name="deliveryType"
+                  value="today"
+                  checked={formData.deliveryType === 'today'}
+                  onChange={handleInputChange}
+                  className="h-4 w-4 text-green-600 focus:ring-green-500"
+                />
+                <span className="ml-2 text-sm text-gray-700">Today</span>
+              </label>
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name="deliveryType"
+                  value="choose"
+                  checked={formData.deliveryType === 'choose'}
+                  onChange={handleInputChange}
+                  className="h-4 w-4 text-green-600 focus:ring-green-500"
+                />
+                <span className="ml-2 text-sm text-gray-700">Choose a date:</span>
+                <input
+                  type="date"
+                  min={minDate}
+                  name="deliveryDate"
+                  value={formData.deliveryDate}
+                  onChange={handleInputChange}
+                  disabled={formData.deliveryType !== 'choose'}
+                  className="ml-2 px-2 py-1 border border-gray-300 rounded-md text-gray-900"
+                />
+              </label>
+            </div>
+          </div>
+
           {/* Payment Method */}
           <div className="bg-white rounded-lg shadow-sm p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
@@ -579,7 +482,7 @@ const CheckoutPage = () => {
                     UPI Payment
                   </span>
                   <span className="block text-sm text-gray-500">
-                    Pay using qr code
+                    <span className="font-semibold text-yellow-700">UPI payment is not enabled. Please use cash on delivery to prevent any loss. We are working on that.</span>
                   </span>
                 </div>
               </label>
@@ -670,10 +573,7 @@ const CheckoutPage = () => {
 
       <UPIPaymentModal
         isOpen={showUPIModal}
-        onClose={handlePaymentCancel}
-        orderId={currentOrderId}
-        amount={total}
-        onPaymentComplete={handlePaymentComplete}
+        onClose={() => setShowUPIModal(false)}
       />
     </div>
   );

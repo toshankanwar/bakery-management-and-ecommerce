@@ -2,45 +2,55 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 import { db } from '@/firebase/config';
-import { 
-  collection, 
-  query, 
-  getDocs, 
-  where, 
-  orderBy
+import {
+  collection,
+  query,
+  getDocs,
+  where,
+  orderBy,
+  doc,
+  getDoc,
 } from 'firebase/firestore';
 import Image from 'next/image';
-import { 
-  ShoppingCartIcon, 
-  AdjustmentsHorizontalIcon,
+import {
+  ShoppingCartIcon,
   XMarkIcon,
   ChevronDownIcon,
-  Bars3Icon
+  Bars3Icon,
 } from '@heroicons/react/24/outline';
-import { Slider } from '@mui/material';
 import useCart from '@/hooks/useCart';
 import { Toaster, toast } from 'react-hot-toast';
+
 const ShopPage = () => {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [priceRange, setPriceRange] = useState([0, 1000]);
   const [availability, setAvailability] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
-  const { handleAddToCart } = useCart();
+  const [cartQuantities, setCartQuantities] = useState({});
+  const { handleAddToCart, cart } = useCart();
+
+  const toSlug = (str) =>
+    str
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, '')
+      .trim()
+      .replace(/[\s_-]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
   const [stats, setStats] = useState({
     total: 0,
     inStock: 0,
     outOfStock: 0,
-    priceRange: { min: 0, max: 1000 }
+    priceRange: { min: 0, max: 1000 },
   });
- 
 
   const categories = [
     { id: 'all', name: 'All Items' },
@@ -48,7 +58,7 @@ const ShopPage = () => {
     { id: 'pastries', name: 'Pastries' },
     { id: 'breads', name: 'Breads' },
     { id: 'cookies', name: 'Cookies' },
-    { id: 'beverages', name: 'Beverages' }
+    { id: 'beverages', name: 'Beverages' },
   ];
 
   const sortOptions = [
@@ -57,10 +67,21 @@ const ShopPage = () => {
     { id: 'priceAsc', name: 'Price: Low to High' },
     { id: 'priceDesc', name: 'Price: High to Low' },
     { id: 'nameAsc', name: 'Name: A to Z' },
-    { id: 'nameDesc', name: 'Name: Z to A' }
+    { id: 'nameDesc', name: 'Name: Z to A' },
   ];
 
   const itemsPerPageOptions = [10, 20, 30, 50];
+
+  // Keep cart state in sync
+  useEffect(() => {
+    if (Array.isArray(cart)) {
+      const cartMap = {};
+      cart.forEach(item => {
+        cartMap[item.productId] = item.quantity;
+      });
+      setCartQuantities(cartMap);
+    }
+  }, [cart]);
 
   const fetchProducts = async () => {
     try {
@@ -95,19 +116,18 @@ const ShopPage = () => {
 
       const q = query(productsRef, ...queryConstraints);
       const snapshot = await getDocs(q);
-      
+
       let fetchedProducts = snapshot.docs.map(doc => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       }));
 
-      let filtered = fetchedProducts.filter(product => 
-        product.price >= priceRange[0] && 
-        product.price <= priceRange[1]
+      let filtered = fetchedProducts.filter(product =>
+        product.price >= priceRange[0] && product.price <= priceRange[1]
       );
 
       if (availability !== 'all') {
-        filtered = filtered.filter(product => 
+        filtered = filtered.filter(product =>
           availability === 'inStock' ? product.inStock : !product.inStock
         );
       }
@@ -118,8 +138,8 @@ const ShopPage = () => {
         outOfStock: fetchedProducts.filter(p => !p.inStock).length,
         priceRange: {
           min: Math.min(...fetchedProducts.map(p => p.price)),
-          max: Math.max(...fetchedProducts.map(p => p.price))
-        }
+          max: Math.max(...fetchedProducts.map(p => p.price)),
+        },
       };
 
       setStats(statsData);
@@ -127,11 +147,7 @@ const ShopPage = () => {
       setFilteredProducts(filtered);
 
     } catch (error) {
-      console.error('Error fetching products:', {
-        error: error.message,
-        timestamp: '2025-06-11 10:53:55',
-        user: 'Kala-bot-apk'
-      });
+      console.error('Error fetching products:', error);
     } finally {
       setLoading(false);
     }
@@ -139,19 +155,19 @@ const ShopPage = () => {
 
   useEffect(() => {
     fetchProducts();
+    // eslint-disable-next-line
   }, [selectedCategory, sortBy]);
 
   useEffect(() => {
     if (products.length > 0) {
       let filtered = [...products];
 
-      filtered = filtered.filter(product => 
-        product.price >= priceRange[0] && 
-        product.price <= priceRange[1]
+      filtered = filtered.filter(product =>
+        product.price >= priceRange[0] && product.price <= priceRange[1]
       );
 
       if (availability !== 'all') {
-        filtered = filtered.filter(product => 
+        filtered = filtered.filter(product =>
           availability === 'inStock' ? product.inStock : !product.inStock
         );
       }
@@ -168,8 +184,6 @@ const ShopPage = () => {
     setSortBy('newest');
     setCurrentPage(1);
   };
-
-
 
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const paginatedProducts = filteredProducts.slice(
@@ -189,66 +203,107 @@ const ShopPage = () => {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0 }
   };
+
+  // Out of stock logic, low stock badges
+  const isStrictlyOutOfStock = (product) =>
+    !product.quantity || product.quantity === 0;
+
+  const lowStockMessage = (product) => {
+    if (!product.quantity || product.quantity === 0) return null;
+    if (product.quantity <= 10)
+      return `Only ${product.quantity} left!`;
+    if (product.quantity > 10 && product.quantity <= 14)
+      return `${product.quantity} left`;
+    return null;
+  };
+
+  // Add to cart with up-to-date Firestore check
+  const handleAddToCartWithLimit = async (product) => {
+    // Always fetch the cart quantities and current product quantity before adding
+    const currentQtyInCart = cartQuantities[product.id] || 0;
+    try {
+      // Get live quantity from Firestore for this product
+      const productRef = doc(db, 'bakeryItems', product.id);
+      const snap = await getDoc(productRef);
+      let liveQuantity = product.quantity;
+      if (snap.exists()) {
+        const data = snap.data();
+        liveQuantity = data.quantity;
+      }
+      // If out of stock or cart already has all available, block
+      if (!liveQuantity || liveQuantity === 0) {
+        toast.error('Item is out of stock');
+        return;
+      }
+      if (currentQtyInCart >= liveQuantity) {
+        toast.error(`Only ${liveQuantity} available. You can't add more.`);
+        return;
+      }
+      // If passes above, add to cart
+      await handleAddToCart(product);
+      toast.success('Added to cart!');
+    } catch (err) {
+      console.error('Error checking stock before add to cart:', err);
+      toast.error('Failed to check stock.');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white">
+      
       {/* Sticky Header */}
       <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm shadow-sm">
-  <div className="max-w-7xl mx-auto">
-    <div className="flex items-center justify-between h-14 px-4">
-      {/* Left side - Title and Hamburger */}
-      <div className="flex items-center">
-        <button
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="md:hidden mr-4 text-gray-800 hover:text-gray-700"
-        >
-          <Bars3Icon className="h-6 w-6" />
-        </button>
-        <h1 className="text-xl font-bold text-gray-800">Our Products</h1>
-      </div>
-
-      {/* Desktop Sort Options */}
-      <div className="hidden md:flex items-center space-x-5">
-        <div className="relative">
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="appearance-none bg-white border border-gray-300 rounded-md px-3 py-1.5 pr-8 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
-          >
-            {sortOptions.map(option => (
-              <option key={option.id} value={option.id}>
-                {option.name}
-              </option>
-            ))}
-          </select>
-          <ChevronDownIcon className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between h-14 px-4">
+            <div className="flex items-center">
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="md:hidden mr-4 text-gray-800 hover:text-gray-700"
+              >
+                <Bars3Icon className="h-6 w-6" />
+              </button>
+              <h1 className="text-xl font-bold text-gray-800">Our Shop</h1>
+            </div>
+            <div className="hidden md:flex items-center space-x-5">
+              <div className="relative">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="appearance-none bg-white border border-gray-300 rounded-md px-3 py-1.5 pr-8 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
+                >
+                  {sortOptions.map(option => (
+                    <option key={option.id} value={option.id}>
+                      {option.name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDownIcon className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              </div>
+              <div className="relative">
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="appearance-none bg-white border border-gray-300 rounded-md px-3 py-1.5 pr-8 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
+                >
+                  {itemsPerPageOptions.map(option => (
+                    <option key={option} value={option}>
+                      {option} per page
+                    </option>
+                  ))}
+                </select>
+                <ChevronDownIcon className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              </div>
+            </div>
+          </div>
         </div>
-
-        <div className="relative">
-          <select
-            value={itemsPerPage}
-            onChange={(e) => {
-              setItemsPerPage(Number(e.target.value));
-              setCurrentPage(1);
-            }}
-            className="appearance-none bg-white border border-gray-300 rounded-md px-3 py-1.5 pr-8 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
-          >
-            {itemsPerPageOptions.map(option => (
-              <option key={option} value={option}>
-                {option} per page
-              </option>
-            ))}
-          </select>
-          <ChevronDownIcon className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-        </div>
       </div>
-    </div>
-  </div>
-</div>
       <div className="flex">
         {/* Desktop Sidebar */}
         <div className="hidden md:block max-w-[280px] h-[calc(100vh-4rem)] bg-white ">
           <div className="sticky top-17 p-2 space-y-6">
-            {/* Categories */}
             <div>
               <h2 className="text-lg font-semibold mb-3">Categories</h2>
               <div className="space-y-1">
@@ -267,11 +322,6 @@ const ShopPage = () => {
                 ))}
               </div>
             </div>
-
-            {/* Price Range */}
-            
-
-            {/* Availability */}
             <div>
               <h2 className="text-lg font-semibold mb-3">Availability</h2>
               <div className="space-y-1">
@@ -307,8 +357,6 @@ const ShopPage = () => {
                 </button>
               </div>
             </div>
-
-            {/* Reset Filters */}
             <button
               onClick={resetFilters}
               className="w-full bg-gray-100 text-gray-600 px-3 py-2 rounded-md text-sm hover:bg-gray-200 transition-colors"
@@ -339,7 +387,6 @@ const ShopPage = () => {
                   </button>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 space-y-6">
-                  {/* Mobile Sort Options */}
                   <div>
                     <h2 className="text-gray-900 font-semibold mb-3">Sort By</h2>
                     <select
@@ -354,8 +401,6 @@ const ShopPage = () => {
                       ))}
                     </select>
                   </div>
-
-                  {/* Mobile Categories */}
                   <div>
                     <h2 className="text-gray-900 font-semibold mb-3">Categories</h2>
                     <div className="space-y-1">
@@ -377,11 +422,6 @@ const ShopPage = () => {
                       ))}
                     </div>
                   </div>
-
-                  
-        
-
-                  {/* Mobile Availability */}
                   <div>
                     <h2 className="text-gray-900 font-semibold mb-3">Availability</h2>
                     <div className="space-y-1">
@@ -426,8 +466,6 @@ const ShopPage = () => {
                       </button>
                     </div>
                   </div>
-
-                  {/* Mobile Reset Filters */}
                   <button
                     onClick={() => {
                       resetFilters();
@@ -445,161 +483,156 @@ const ShopPage = () => {
 
         {/* Products Grid */}
         <div className="flex-1 p-4">
-  {loading ? (
-    <div className="flex justify-center items-center h-64">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-600"></div>
-    </div>
-  ) : (
-    <>
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="show"
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-      >
-        {paginatedProducts.map((product) => (
-          <motion.div
-            key={product.id}
-            variants={itemVariants}
-            whileHover={{ 
-              y: -5,
-              transition: { duration: 0.2 }
-            }}
-            className="bg-white rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden"
-          >
-            <div className="relative h-56 overflow-hidden group">
-              <Image
-                src={product.imageUrl}
-                alt={product.name}
-                fill
-                className="object-cover rounded-t-lg transition-transform duration-300 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-300"/>
-              {!product.inStock && (
-                <div className="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-medium">
-                  Out of Stock
-                </div>
-              )}
-              {product.isNew && (
-                <div className="absolute top-2 left-2 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-medium">
-                  New
-                </div>
-              )}
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-600"></div>
             </div>
-            <motion.div 
-              className="p-4"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.1 }}
-            >
-              <div className="flex justify-between items-start mb-3">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 hover:text-green-600 transition-colors duration-200">
-                    {product.name}
-                  </h3>
-                  <p className="text-sm text-gray-500">{product.category}</p>
+          ) : (
+            <>
+              <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                animate="show"
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+              >
+                {paginatedProducts.map((product) => {
+                  const outOfStock = isStrictlyOutOfStock(product);
+                  const lowStock = lowStockMessage(product);
+                  const currentQtyInCart = cartQuantities[product.id] || 0;
+                  const disableAdd =
+                    outOfStock || currentQtyInCart >= (product.quantity || 0);
+
+                  return (
+                    <motion.div
+                      key={product.id}
+                      variants={itemVariants}
+                      whileHover={{
+                        y: -5,
+                        transition: { duration: 0.2 }
+                      }}
+                      className="bg-white rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden"
+                    >
+                      {/* Product Card Link */}
+                      <Link href={`/product/${toSlug(product.name)}`} className="block group cursor-pointer">
+                        <div className="relative h-56 overflow-hidden group">
+                          <Image
+                            src={product.imageUrl}
+                            alt={product.name}
+                            fill
+                            className="object-cover rounded-t-lg transition-transform duration-300 group-hover:scale-110"
+                          />
+                          <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-300"/>
+                          {(outOfStock || !product.inStock) && (
+                            <div className="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-medium">
+                              Out of Stock
+                            </div>
+                          )}
+                          {product.isNew && (
+                            <div className="absolute top-2 left-2 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-medium">
+                              New
+                            </div>
+                          )}
+                          {/* Show "Only X left!" if 1-10, or X left if 11-14 */}
+                          {lowStock && (
+                            <div className="absolute bottom-2 left-2 bg-yellow-400 text-black px-3 py-1 rounded-full text-xs font-medium shadow">
+                              {lowStock}
+                            </div>
+                          )}
+                          {/* Show "In Cart: X" if any in cart */}
+                          {currentQtyInCart > 0 && (
+                            <div className="absolute bottom-2 right-2 bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium shadow">
+                              In Cart: {currentQtyInCart}
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-4">
+                          <div className="flex justify-between items-start mb-3">
+                            <div>
+                              <h3 className="text-lg font-semibold text-gray-900 group-hover:text-green-600 transition-colors duration-200">
+                                {product.name}
+                              </h3>
+                              <p className="text-sm text-gray-500">{product.category}</p>
+                            </div>
+                            <span className="text-lg font-bold text-green-600">
+                              ₹ {product.price.toFixed(2)}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-4 line-clamp-2 h-10">
+                            {product.description}
+                          </p>
+                        </div>
+                      </Link>
+                      {/* Add to Cart Button */}
+                      <motion.button
+                        whileHover={{ scale: !disableAdd ? 1.02 : 1 }}
+                        whileTap={{ scale: !disableAdd ? 0.98 : 1 }}
+                        onClick={async (event) => {
+                          event.stopPropagation();
+                          await handleAddToCartWithLimit(product);
+                        }}
+                        disabled={disableAdd}
+                        className={`w-full flex items-center justify-center space-x-2 px-4 py-2.5 rounded-b-md text-sm font-medium transform transition-all duration-200 ${
+                          !disableAdd
+                            ? 'bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg'
+                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        }`}
+                      >
+                        <ShoppingCartIcon className="h-4 w-4" />
+                        <span>
+                          {!disableAdd
+                            ? 'Add to Cart'
+                            : outOfStock
+                            ? 'Out of Stock'
+                            : `Only ${product.quantity} available`}
+                        </span>
+                      </motion.button>
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="mt-8 flex justify-center space-x-2">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 text-sm font-medium rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow transition-all duration-200"
+                  >
+                    Previous
+                  </motion.button>
+                  <span className="px-4 py-2 text-sm font-medium rounded-md bg-white border border-gray-300 text-gray-700">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="px-4 py-2 text-sm font-medium rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow transition-all duration-200"
+                  >
+                    Next
+                  </motion.button>
                 </div>
-                <span className="text-lg font-bold text-green-600">
-                ₹ {product.price.toFixed(2)}
-                </span>
-              </div>
-              <p className="text-sm text-gray-600 mb-4 line-clamp-2 h-10">
-                {product.description}
-              </p>
-              <motion.button
-  whileHover={{ scale: 1.02 }}
-  whileTap={{ scale: 0.98 }}
-  onClick={async () => {
-    if (!product.inStock) {
-      toast.error('Product is out of stock');
-      return;
-    }
-    
-    const button = event.currentTarget;
-    const originalContent = button.innerHTML;
-    
-    try {
-      button.disabled = true;
-      button.innerHTML = `
-        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <span class="ml-2">Adding...</span>
-      `;
-      
-      await handleAddToCart(product);
-      
-      toast.success('Added to cart!');
-    } catch (error) {
-      console.error('Error adding to cart:', {
-        error: error.message,
-        timestamp: '2025-06-13 16:45:40',
-        user: 'Kala-bot-apk'
-      });
-      toast.error('Failed to add to cart');
-    } finally {
-      button.disabled = false;
-      button.innerHTML = originalContent;
-    }
-  }}
-  disabled={!product.inStock}
-  className={`w-full flex items-center justify-center space-x-2 px-4 py-2.5 rounded-md text-sm font-medium transform transition-all duration-200 ${
-    product.inStock
-      ? 'bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg'
-      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-  }`}
->
-  <ShoppingCartIcon className="h-4 w-4" />
-  <span>{product.inStock ? 'Add to Cart' : 'Out of Stock'}</span>
-</motion.button>
-            </motion.div>
-          </motion.div>
-        ))}
-      </motion.div>
+              )}
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="mt-8 flex justify-center space-x-2">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            className="px-4 py-2 text-sm font-medium rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow transition-all duration-200"
-          >
-            Previous
-          </motion.button>
-          <span className="px-4 py-2 text-sm font-medium rounded-md bg-white border border-gray-300 text-gray-700">
-            Page {currentPage} of {totalPages}
-          </span>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className="px-4 py-2 text-sm font-medium rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow transition-all duration-200"
-          >
-            Next
-          </motion.button>
+              {/* Empty State */}
+              {!loading && filteredProducts.length === 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="text-center py-12"
+                >
+                  <h3 className="text-lg font-medium text-gray-900">No products found</h3>
+                  <p className="mt-2 text-sm text-gray-500">Try adjusting your filters</p>
+                </motion.div>
+              )}
+            </>
+          )}
         </div>
-      )}
-
-      {/* Empty State */}
-      {!loading && filteredProducts.length === 0 && (
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="text-center py-12"
-        >
-          <h3 className="text-lg font-medium text-gray-900">No products found</h3>
-          <p className="mt-2 text-sm text-gray-500">Try adjusting your filters</p>
-        </motion.div>
-      )}
-    </>
-  )}
-</div>
       </div>
     </div>
   );

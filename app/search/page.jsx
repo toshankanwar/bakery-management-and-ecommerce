@@ -1,529 +1,274 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import Image from 'next/image';
-import Link from 'next/link';
-import { db } from '@/firebase/config';
+import { useState, useEffect, useRef } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
-import {
-  MagnifyingGlassIcon,
-  SparklesIcon,
-  ShoppingCartIcon,
-  PlusIcon,
-  FireIcon,
-  ClockIcon,
-  XMarkIcon,
-  HeartIcon,
-  StarIcon,
-  TagIcon,
-  CheckIcon,
-  MinusIcon,
-  ShoppingBagIcon
-} from '@heroicons/react/24/outline';
+import { db } from '@/firebase/config';
+import Link from 'next/link';
+import Image from 'next/image';
+import { MagnifyingGlassIcon, XMarkIcon, ArrowUpRightIcon } from '@heroicons/react/24/outline';
 
-const popularSearches = [
-  { text: 'Chocolate', icon: '🍫' },
-  { text: 'Bread', icon: '🍞' },
-  { text: 'Birthday', icon: '🎉' },
-  { text: 'Coffee', icon: '☕' },
-  { text: 'Cookies', icon: '🍪' },
-  { text: 'Pastries', icon: '🥐' },
+const toSlug = (str) =>
+  str
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .trim()
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+const SUGGESTIONS = [
+  "Sourdough Bread",
+  "Chocolate Cake",
+  "Croissant",
+  "Garlic Bread",
+  "Red Velvet Cake",
+  "Blueberry Muffin",
+  "Almond Biscotti",
+  "Multigrain Loaf",
+  "Cheese Danish",
+  "Walnut Brownie",
 ];
 
-const quickCategories = [
-  { name: 'Popular', icon: <FireIcon className="h-5 w-5" />, color: 'bg-rose-50 hover:bg-rose-100 text-rose-500' },
-  { name: 'New', icon: <SparklesIcon className="h-5 w-5" />, color: 'bg-sky-50 hover:bg-sky-100 text-sky-500' },
-  { name: 'Special', icon: <StarIcon className="h-5 w-5" />, color: 'bg-amber-50 hover:bg-amber-100 text-amber-500' },
-  { name: 'Deals', icon: <TagIcon className="h-5 w-5" />, color: 'bg-teal-50 hover:bg-teal-100 text-teal-500' },
-];
-
-const SearchPage = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [items, setItems] = useState([]);
-  const [filteredResults, setFilteredResults] = useState([]);
-  const [cart, setCart] = useState([]);
-  const [showCartNotification, setShowCartNotification] = useState(false);
-  const [lastAddedItem, setLastAddedItem] = useState(null);
-  const [showSuggestions, setShowSuggestions] = useState(true);
-  const [recentSearches, setRecentSearches] = useState([]);
-  const [favorites, setFavorites] = useState([]);
-  const [cartTotal, setCartTotal] = useState(0);
-  const [cartItemsCount, setCartItemsCount] = useState(0);
+export default function SearchPage() {
+  const [query, setQuery] = useState('');
+  const [allItems, setAllItems] = useState([]);
+  const [filtered, setFiltered] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const inputRef = useRef(null);
 
   useEffect(() => {
-    const loadStoredData = async () => {
-      const savedCart = localStorage.getItem('cart');
-      const savedSearches = localStorage.getItem('recentSearches');
-      const savedFavorites = localStorage.getItem('favorites');
-
-      if (savedCart) {
-        const parsedCart = JSON.parse(savedCart);
-        setCart(parsedCart);
-        updateCartTotals(parsedCart);
-      }
-      if (savedSearches) setRecentSearches(JSON.parse(savedSearches));
-      if (savedFavorites) setFavorites(JSON.parse(savedFavorites));
-
+    // Fetch all bakery items once
+    const fetchItems = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, 'bakeryItems'));
-        const fetchedItems = querySnapshot.docs
-          .map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-            isFavorite: JSON.parse(savedFavorites || '[]').includes(doc.id)
-          }))
-          .filter(item => item.inStock);
-        
-        setItems(fetchedItems);
-      } catch (error) {
-        console.error('Error fetching items:', error);
+        const snap = await getDocs(collection(db, 'bakeryItems'));
+        const items = snap.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setAllItems(items);
+      } catch (e) {
+        // handle error
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
-
-    loadStoredData();
+    fetchItems();
   }, []);
 
-  const updateCartTotals = (cartItems) => {
-    const total = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const count = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-    setCartTotal(total);
-    setCartItemsCount(count);
-    localStorage.setItem('cart', JSON.stringify(cartItems));
-  };
-
-  const addToCart = (item) => {
-    setCart(prev => {
-      const existingItem = prev.find(i => i.id === item.id);
-      const updatedCart = existingItem
-        ? prev.map(i => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i)
-        : [...prev, { ...item, quantity: 1 }];
-      updateCartTotals(updatedCart);
-      return updatedCart;
-    });
-
-    setLastAddedItem(item.name);
-    setShowCartNotification(true);
-    setTimeout(() => {
-      setShowCartNotification(false);
-      setLastAddedItem(null);
-    }, 2000);
-  };
-
-  const removeFromCart = (itemId) => {
-    setCart(prev => {
-      const existingItem = prev.find(i => i.id === itemId);
-      const updatedCart = existingItem?.quantity > 1
-        ? prev.map(i => i.id === itemId ? { ...i, quantity: i.quantity - 1 } : i)
-        : prev.filter(i => i.id !== itemId);
-      updateCartTotals(updatedCart);
-      return updatedCart;
-    });
-  };
-
-  const handleSearch = (e) => {
-    const query = e.target.value;
-    setSearchQuery(query);
-    
+  useEffect(() => {
     if (!query.trim()) {
-      setFilteredResults([]);
-      setShowSuggestions(true);
+      setFiltered([]);
       return;
     }
-
-    const results = items.filter(item => 
-      item.name.toLowerCase().includes(query.toLowerCase()) ||
-      item.description?.toLowerCase().includes(query.toLowerCase())
+    const q = query.toLowerCase();
+    setFiltered(
+      allItems.filter(
+        (item) =>
+          item.name?.toLowerCase().includes(q) ||
+          item.description?.toLowerCase().includes(q)
+      )
     );
-    setFilteredResults(results);
-    setShowSuggestions(query.length < 2);
-  };
+  }, [query, allItems]);
 
-  const saveRecentSearch = (query) => {
-    if (!query.trim()) return;
-    const updated = [query, ...recentSearches.filter(item => item !== query)].slice(0, 5);
-    setRecentSearches(updated);
-    localStorage.setItem('recentSearches', JSON.stringify(updated));
-  };
-
-  const toggleFavorite = (itemId) => {
-    const updated = favorites.includes(itemId)
-      ? favorites.filter(id => id !== itemId)
-      : [...favorites, itemId];
-    
-    setFavorites(updated);
-    localStorage.setItem('favorites', JSON.stringify(updated));
-    
-    const updatedItems = items.map(item => ({
-      ...item,
-      isFavorite: updated.includes(item.id)
-    }));
-    setItems(updatedItems);
-    
-    if (filteredResults.length > 0) {
-      setFilteredResults(filteredResults.map(item => ({
-        ...item,
-        isFavorite: updated.includes(item.id)
-      })));
-    }
-  };
-
-  const ResultCard = ({ item }) => {
-    const itemInCart = cart.find(i => i.id === item.id);
-    const quantity = itemInCart?.quantity || 0;
-
-    return (
-      <motion.div
-        layout
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        whileHover={{ y: -8, transition: { duration: 0.2 } }}
-        className="group relative bg-white rounded-xl overflow-hidden transform transition-all duration-300 hover:shadow-lg border border-amber-100/50"
-      >
-        <Link href={`/product/${item.id}`}>
-          <div className="relative h-48 w-full overflow-hidden">
-            <Image
-              src={item.imageUrl || '/bakery-placeholder.jpg'}
-              alt={item.name}
-              fill
-              className="object-cover transform transition-transform group-hover:scale-110 duration-300"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              priority={false}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-amber-50/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                toggleFavorite(item.id);
-              }}
-              className={`absolute top-2 right-2 p-2 rounded-full transition-all duration-300 ${
-                item.isFavorite 
-                  ? 'bg-rose-500 text-white' 
-                  : 'bg-white/90 text-rose-300 hover:text-rose-500'
-              }`}
-            >
-              <HeartIcon className="h-5 w-5" />
-            </button>
-          </div>
-        </Link>
-        <div className="p-4">
-          <h3 className="font-medium text-amber-700 group-hover:text-amber-500 transition-colors duration-200">
-            {item.name}
-          </h3>
-          <p className="text-sm text-amber-600/60 line-clamp-2 mt-1">
-            {item.description || 'No description available'}
-          </p>
-          <div className="mt-4 flex items-center justify-between">
-            <div>
-              <span className="text-amber-600 font-medium text-lg">
-                ${item.price?.toFixed(2) || '0.00'}
-              </span>
-              {item.oldPrice && (
-                <span className="ml-2 text-sm text-amber-400 line-through">
-                  ${item.oldPrice.toFixed(2)}
-                </span>
-              )}
-            </div>
-            {quantity > 0 ? (
-              <div className="flex items-center gap-2">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    removeFromCart(item.id);
-                  }}
-                  className="p-1.5 bg-amber-100 text-amber-600 rounded-full hover:bg-amber-200"
-                >
-                  <MinusIcon className="h-4 w-4" />
-                </motion.button>
-                <span className="text-amber-600 font-medium min-w-[20px] text-center">
-                  {quantity}
-                </span>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    addToCart(item);
-                  }}
-                  className="p-1.5 bg-amber-500 text-white rounded-full hover:bg-amber-600"
-                >
-                  <PlusIcon className="h-4 w-4" />
-                </motion.button>
-              </div>
-            ) : (
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  addToCart(item);
-                }}
-                className="flex items-center gap-2 px-3 py-1.5 bg-amber-500 text-white rounded-full text-sm font-medium hover:bg-amber-600 transition-colors"
-              >
-                <PlusIcon className="h-4 w-4" />
-                Add
-              </motion.button>
-            )}
-          </div>
-        </div>
-      </motion.div>
-    );
+  // For accessibility: keyboard navigation on suggestions
+  const handleSuggestionClick = (suggestion) => {
+    setQuery(suggestion);
+    setShowSuggestions(false);
+    inputRef.current?.focus();
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50/30 via-white to-amber-50/20 py-6">
-      <div className="max-w-7xl mx-auto px-4">
-        <AnimatePresence>
-          {showCartNotification && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="fixed top-4 right-20 bg-amber-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 flex items-center gap-2"
-            >
-              <CheckIcon className="h-5 w-5" />
-              Added {lastAddedItem} to cart!
-            </motion.div>
-          )}
-        </AnimatePresence>
+    <main className="min-h-screen bg-gradient-to-tr from-green-50 via-white to-green-100 py-12 px-0">
+      <div className="flex flex-col md:flex-row max-w-7xl mx-auto">
+        {/* Left Side Visual/Info */}
+        <aside className="hidden md:flex flex-col items-center justify-center w-1/3 pr-6 py-12">
+          <div className="mb-8 w-full">
+            <Image
+              src="https://cdn.pixabay.com/photo/2016/12/11/20/01/coffee-1900194_1280.jpg"
+              alt="Bakery Visual"
+              width={340}
+              height={340}
+              className="rounded-3xl shadow-2xl object-cover w-full"
+            />
+          </div>
+          <div className="text-center text-green-800 font-semibold text-xl mb-2">
+            Welcome to Toshan Bakery Search
+          </div>
+          <div className="text-gray-500 text-base mb-1">
+            Find your favorite breads, cakes, pastries and more.
+          </div>
+          <div className="rounded-full inline-block bg-green-100 text-green-800 px-4 py-1 mt-3 font-medium text-sm shadow">
+            100% Fresh, Everyday!
+          </div>
+        </aside>
 
-        <div className="fixed top-4 right-4 z-40">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-md border border-amber-100"
+        {/* Main Content Area */}
+        <div className="flex-1 w-full md:w-2/3 px-4 md:px-0">
+          <div className="flex flex-col items-center justify-center mb-8 pt-6">
+            <h1 className="text-3xl md:text-4xl font-bold text-green-800 mb-3 tracking-tight text-center">
+              Search Our Bakery Items
+            </h1>
+            <p className="text-gray-500 text-center max-w-lg">
+              Discover fresh breads, cakes, pastries and more. Start typing to find your favorite treat!
+            </p>
+          </div>
+          <form
+            onSubmit={e => e.preventDefault()}
+            className="mb-10 relative"
+            autoComplete="off"
           >
-            <ShoppingBagIcon className="h-5 w-5 text-amber-500" />
-            <div className="flex items-center gap-1">
-              <span className="text-amber-500 font-medium">{cartItemsCount}</span>
-              <span className="text-amber-400">·</span>
-              <span className="text-amber-500 font-medium">${cartTotal.toFixed(2)}</span>
+            <div className="flex items-center bg-white/90 rounded-full shadow-xl px-6 py-3 border-2 border-green-200 focus-within:ring-2 focus-within:ring-green-400 transition-all duration-200 backdrop-blur-md">
+              <MagnifyingGlassIcon className="w-6 h-6 text-green-600 mr-2" />
+              <input
+                ref={inputRef}
+                className="flex-1 bg-transparent outline-none text-lg text-gray-800 placeholder-gray-400"
+                type="text"
+                name="search"
+                placeholder="Search by name or description…"
+                value={query}
+                onChange={e => {
+                  setQuery(e.target.value);
+                  setShowSuggestions(true);
+                }}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 120)}
+                autoFocus
+                spellCheck="false"
+                aria-label="Search bakery items"
+                autoComplete="off"
+              />
+              {query && (
+                <button
+                  type="button"
+                  aria-label="Clear search"
+                  onClick={() => {
+                    setQuery('');
+                    inputRef.current?.focus();
+                  }}
+                  className="ml-2 text-gray-400 hover:text-green-600 transition"
+                >
+                  <XMarkIcon className="w-5 h-5" />
+                </button>
+              )}
             </div>
-          </motion.button>
-        </div>
-
-        <motion.div
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="mb-8"
-        >
-          <div className="bg-white rounded-2xl shadow-sm border border-amber-100 p-8 relative overflow-hidden">
-            <div className="relative z-10">
-              <motion.h1 
-                initial={{ y: -20 }}
-                animate={{ y: 0 }}
-                className="text-3xl font-semibold text-amber-700 mb-2"
-              >
-                this page is under development please give time to fix
-              </motion.h1>
-              <p className="text-amber-600/60 mb-6">
-                Discover our delicious collection of freshly baked goods
-              </p>
-              
-              <div className="relative mb-6">
-                <div className="relative flex items-center">
-                  <MagnifyingGlassIcon className="h-5 w-5 absolute left-4 text-amber-400" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={handleSearch}
-                    onFocus={() => setShowSuggestions(true)}
-                    placeholder="Search our bakery..."
-                    className="w-full pl-12 pr-4 py-4 rounded-xl border border-amber-200 bg-amber-50/50 focus:bg-white focus:ring-2 focus:ring-amber-200 focus:border-amber-300 transition-all duration-300 text-amber-700 placeholder-amber-400"
-                  />
-                  {searchQuery && (
-                    <button
-                      onClick={() => {
-                        setSearchQuery('');
-                        setFilteredResults([]);
-                        setShowSuggestions(true);
-                      }}
-                      className="absolute right-4 text-amber-400 hover:text-amber-500"
-                    >
-                      <XMarkIcon className="h-5 w-5" />
-                    </button>
-                  )}
-                </div>
-
-                {showSuggestions && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-sm border border-amber-100 p-4 z-50"
-                  >
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-                      {quickCategories.map((category) => (
-                        <motion.button
-                          key={category.name}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => {
-                            setSearchQuery(category.name);
-                            saveRecentSearch(category.name);
-                            setShowSuggestions(false);
-                            const results = items.filter(item => 
-                              item.name.toLowerCase().includes(category.name.toLowerCase()) ||
-                              item.description?.toLowerCase().includes(category.name.toLowerCase())
-                            );
-                            setFilteredResults(results);
-                          }}
-                          className={`flex flex-col items-center p-3 rounded-lg ${category.color} transition-colors`}
-                        >
-                          <div className="mb-2">
-                            {category.icon}
-                          </div>
-                          <span className="text-sm font-medium">
-                            {category.name}
-                          </span>
-                        </motion.button>
-                      ))}
-                    </div>
-
-                    {recentSearches.length > 0 && (
-                      <div className="mb-6">
-                        <div className="flex items-center justify-between mb-3">
-                          <h3 className="text-sm font-medium text-amber-700">
-                            Recent Searches
-                          </h3>
-                          <button
-                            onClick={() => {
-                              setRecentSearches([]);
-                              localStorage.removeItem('recentSearches');
-                            }}
-                            className="text-xs text-amber-400 hover:text-amber-500 flex items-center gap-1"
-                          >
-                            <XMarkIcon className="h-4 w-4" />
-                            Clear
-                          </button>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {recentSearches.map((search) => (
-                            <motion.button
-                              key={search}
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => {
-                                setSearchQuery(search);
-                                saveRecentSearch(search);
-                                setShowSuggestions(false);
-                                const results = items.filter(item => 
-                                  item.name.toLowerCase().includes(search.toLowerCase()) ||
-                                  item.description?.toLowerCase().includes(search.toLowerCase())
-                                );
-                                setFilteredResults(results);
-                              }}
-                              className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 rounded-full text-sm text-amber-600 hover:text-amber-700 transition-colors border border-amber-100"
-                            >
-                              <ClockIcon className="h-4 w-4" />
-                              {search}
-                            </motion.button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    <div>
-                      <h3 className="text-sm font-medium text-amber-700 mb-3">
-                        Popular Searches
-                      </h3>
-                      <div className="flex flex-wrap gap-2">
-                        {popularSearches.map((search) => (
-                          <motion.button
-                            key={search.text}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => {
-                              setSearchQuery(search.text);
-                              saveRecentSearch(search.text);
-                              setShowSuggestions(false);
-                              const results = items.filter(item => 
-                                item.name.toLowerCase().includes(search.text.toLowerCase()) ||
-                                item.description?.toLowerCase().includes(search.text.toLowerCase())
-                              );
-                              setFilteredResults(results);
-                            }}
-                            className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 rounded-full text-sm text-amber-600 hover:text-amber-700 transition-colors border border-amber-100"
-                          >
-                            <span>{search.icon}</span>
-                            {search.text}
-                          </motion.button>
-                        ))}
-                      </div>
-                    </div>
-                  </motion.div>
+            {/* Suggestions Dropdown */}
+            {showSuggestions && !loading && (
+              <div className="absolute left-0 right-0 z-20 mt-2 bg-white rounded-xl shadow-xl border border-green-100 py-2 max-h-72 overflow-y-auto">
+                {SUGGESTIONS.filter(s => s.toLowerCase().includes(query.toLowerCase())).length === 0 ? (
+                  <div className="px-6 py-2 text-gray-400 text-sm">No suggestions found.</div>
+                ) : (
+                  SUGGESTIONS.filter(s => s.toLowerCase().includes(query.toLowerCase()))
+                    .slice(0, 6)
+                    .map((suggestion) => (
+                      <button
+                        key={suggestion}
+                        type="button"
+                        onClick={() => handleSuggestionClick(suggestion)}
+                        className="w-full text-left px-6 py-2 hover:bg-green-50 focus:bg-green-100 text-green-800 font-medium flex items-center gap-2 transition"
+                        tabIndex={0}
+                      >
+                        <MagnifyingGlassIcon className="w-4 h-4 text-green-400 mr-1" />
+                        {suggestion}
+                      </button>
+                    ))
                 )}
               </div>
+            )}
+          </form>
+
+          {/* Search State Notifications */}
+          {!query && !loading && (
+            <div className="flex flex-col items-center mt-24 opacity-80 select-none">
+              <MagnifyingGlassIcon className="w-12 h-12 text-green-200 mb-2" />
+              <div className="text-green-900 font-semibold text-xl mb-2">
+                Start typing to search bakery items
+              </div>
+              <div className="text-gray-400 mb-1 text-base flex flex-wrap gap-2 justify-center">
+                <span>Try:</span>
+                {SUGGESTIONS.slice(0, 4).map(s => (
+                  <button
+                    key={s}
+                    onClick={() => handleSuggestionClick(s)}
+                    className="bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium shadow-sm hover:bg-green-200 hover:text-green-900 transition"
+                    tabIndex={0}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
             </div>
-
-            <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-96 h-96 bg-amber-100/30 rounded-full opacity-20 blur-3xl animate-pulse" />
-            <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/2 w-96 h-96 bg-amber-200/30 rounded-full opacity-20 blur-3xl animate-pulse" />
-          </div>
-        </motion.div>
-
-        <div>
-          {searchQuery && filteredResults.length > 0 && !isLoading && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="mb-6"
-            >
-              <p className="text-amber-600">
-                Found {filteredResults.length} {filteredResults.length === 1 ? 'item' : 'items'}
-              </p>
-            </motion.div>
           )}
 
-          {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3, 4, 5, 6].map((n) => (
-                <div key={n} className="bg-white rounded-xl p-4 border border-amber-100 animate-pulse">
-                  <div className="w-full h-48 bg-amber-50 rounded-lg mb-4" />
-                  <div className="h-4 bg-amber-50 rounded w-3/4 mb-2" />
-                  <div className="h-4 bg-amber-50 rounded w-1/2" />
-                </div>
-              ))}
+          {loading ? (
+            <div className="flex justify-center py-20">
+              <span className="text-green-700 font-medium animate-pulse">Loading...</span>
             </div>
-          ) : searchQuery && filteredResults.length > 0 ? (
-            <motion.div
-              layout
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-            >
-              <AnimatePresence mode="popLayout">
-                {filteredResults.map((item) => (
-                  <ResultCard key={item.id} item={item} />
-                ))}
-              </AnimatePresence>
-            </motion.div>
-          ) : searchQuery ? (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center py-12"
-            >
-              <SparklesIcon className="h-12 w-12 text-amber-200 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-amber-700 mb-2">
-                No items found
-              </h3>
-              <p className="text-amber-600/60">
-                Try adjusting your search terms or browse our suggestions
-              </p>
-            </motion.div>
-          ) : null}
+          ) : (
+            <>
+              {filtered.length === 0 && query ? (
+                <div className="text-center text-gray-500 mt-24">
+                  <div className="inline-flex items-center gap-2 text-lg font-semibold">
+                    <MagnifyingGlassIcon className="w-6 h-6 text-green-400" />
+                    No items found matching <span className="text-green-800">{query}</span>
+                  </div>
+                  <div className="mt-6 flex flex-wrap gap-2 justify-center">
+                    <span className="text-gray-400">Suggestions:</span>
+                    {SUGGESTIONS.slice(0, 4).map(s => (
+                      <button
+                        key={s}
+                        onClick={() => handleSuggestionClick(s)}
+                        className="bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium shadow-sm hover:bg-green-200 hover:text-green-900 transition"
+                        tabIndex={0}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="grid gap-7 sm:grid-cols-2">
+                  {filtered.map(item => {
+                    const slug = item.slug && typeof item.slug === 'string'
+                      ? item.slug
+                      : toSlug(item.name || '');
+                    return (
+                      <Link
+                        key={item.id}
+                        href={`/product/${slug}`}
+                        className="block group rounded-2xl bg-white border border-green-100 hover:shadow-2xl shadow-md transition-all duration-200 overflow-hidden hover:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-400"
+                      >
+                        <div className="relative h-48 w-full overflow-hidden">
+                          <Image
+                            src={item.imageUrl || '/breads.jpg'}
+                            alt={item.name}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-300"
+                            sizes="(max-width: 768px) 100vw, 50vw"
+                          />
+                          <div className="absolute top-0 right-0 m-2 px-3 py-1 bg-green-600/90 text-white text-xs rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-1">
+                            View Item <ArrowUpRightIcon className="w-4 h-4" />
+                          </div>
+                        </div>
+                        <div className="p-5">
+                          <h3 className="text-lg font-semibold text-green-800 group-hover:text-green-600 transition-colors mb-1">
+                            {item.name}
+                          </h3>
+                          <p className="text-gray-500 text-sm mb-2 line-clamp-2">{item.description}</p>
+                          <div className="mt-3">
+                            <span className="inline-block bg-green-100 text-green-800 font-semibold px-3 py-1 rounded-full text-[15px] shadow-sm">
+                              ₹{item.price}
+                            </span>
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
-    </div>
+    </main>
   );
-};
-
-export default SearchPage;
+}

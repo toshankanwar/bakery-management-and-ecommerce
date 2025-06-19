@@ -260,6 +260,7 @@ const Navbar = () => {
 
             {/* Right side */}
             <div className="flex items-center space-x-3">
+            <Link href="/search" className="hidden md:block">
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
@@ -267,6 +268,7 @@ const Navbar = () => {
               >
                 <MagnifyingGlassIcon className="h-6 w-6" />
               </motion.button>
+              </Link>
 
               <Link href="/cart" className="hidden md:block">
                 <motion.div

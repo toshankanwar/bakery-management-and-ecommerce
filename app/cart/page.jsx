@@ -22,7 +22,7 @@ import {
   updateDoc, 
   deleteDoc, 
   where,
-  setDoc
+  getDoc
 } from 'firebase/firestore';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'react-hot-toast';
@@ -116,9 +116,11 @@ const CartPage = () => {
   const [updating, setUpdating] = useState(null);
   const [isDeleting, setIsDeleting] = useState(null);
   const [editingRequest, setEditingRequest] = useState({});
+  const [productStock, setProductStock] = useState({});
   const { user } = useAuthContext();
   const router = useRouter();
 
+  // Fetch current cart items
   const fetchCartItems = async () => {
     if (!user) {
       setLoading(false);
@@ -149,13 +151,51 @@ const CartPage = () => {
     }
   };
 
+  // Fetch product stock for all cart items
+  const fetchProductStock = async (cartItems) => {
+    if (!cartItems || cartItems.length === 0) {
+      setProductStock({});
+      return;
+    }
+    try {
+      const stocks = {};
+      await Promise.all(
+        cartItems.map(async (item) => {
+          // Try bakeryItems/{item.productId} first, fallback to bakeryItems/{item.id}
+          let ref = doc(db, 'bakeryItems', item.productId || item.id);
+          let snap = await getDoc(ref);
+          if (!snap.exists() && item.id !== item.productId) {
+            // fallback to id
+            ref = doc(db, 'bakeryItems', item.id);
+            snap = await getDoc(ref);
+          }
+          stocks[item.id] = snap.exists() ? (snap.data().quantity ?? 0) : 0;
+        })
+      );
+      setProductStock(stocks);
+    } catch (error) {
+      console.error('Error fetching product stock:', error);
+    }
+  };
+
   useEffect(() => {
     fetchCartItems();
   }, [user]);
 
+  useEffect(() => {
+    if (cartItems.length > 0) {
+      fetchProductStock(cartItems);
+    }
+  }, [cartItems]);
+
+  // Update quantity but restrict to available stock
   const updateQuantity = async (itemId, newQuantity) => {
-    if (!user || newQuantity < 0 || newQuantity > 50) return;
-    
+    if (!user || newQuantity < 1 || newQuantity > 50) return;
+    const stock = productStock[itemId];
+    if (typeof stock === 'number' && newQuantity > stock) {
+      toast.error(`Only ${stock} in stock`);
+      return;
+    }
     setUpdating(itemId);
     try {
       const itemRef = doc(db, 'carts', user.uid, 'items', itemId);
@@ -314,177 +354,189 @@ const CartPage = () => {
             {/* Cart Items */}
             <div className="lg:col-span-2 space-y-4">
               <AnimatePresence>
-                {cartItems.map((item) => (
-                  <motion.div
-                    key={item.id}
-                    layout
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className="bg-white rounded-lg shadow-sm p-4 sm:p-6 hover:shadow-md transition-shadow duration-200"
-                  >
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0">
-                      {/* Image */}
-                      <div className="relative h-24 w-24 rounded-md overflow-hidden group">
-                        <Image
-                          src={item.image || '/default-product.png'}
-                          alt={item.name}
-                          fill
-                          sizes="96px"
-                          className="object-cover transition-transform duration-200 group-hover:scale-105"
-                          onError={(e) => {
-                            e.target.src = '/default-product.png';
-                          }}
-                        />
-                      </div>
-
-                      {/* Item Details */}
-                      <div className="flex-1 sm:ml-6 space-y-4">
-                        {/* Name and Remove Button */}
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="text-lg font-semibold text-gray-900 hover:text-green-600 transition-colors duration-200">
-                              {item.name}
-                            </h3>
-                            <p className="mt-1 text-sm text-gray-500 capitalize">{item.category}</p>
-                          </div>
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => removeItem(item.id)}
-                            disabled={isDeleting === item.id}
-                            className="text-gray-400 hover:text-red-500 transition-colors duration-200"
-                          >
-                            {isDeleting === item.id ? (
-                              <div className="h-5 w-5 animate-spin rounded-full border-2 border-red-300 border-t-red-600" />
-                            ) : (
-                              <XMarkIcon className="h-5 w-5" />
-                            )}
-                          </motion.button>
+                {cartItems.map((item) => {
+                  const maxQuantity = productStock[item.id] ?? 0;
+                  return (
+                    <motion.div
+                      key={item.id}
+                      layout
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      className="bg-white rounded-lg shadow-sm p-4 sm:p-6 hover:shadow-md transition-shadow duration-200"
+                    >
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0">
+                        {/* Image */}
+                        <div className="relative h-24 w-24 rounded-md overflow-hidden group">
+                          <Image
+                            src={item.image || '/default-product.png'}
+                            alt={item.name}
+                            fill
+                            sizes="96px"
+                            className="object-cover transition-transform duration-200 group-hover:scale-105"
+                            onError={(e) => {
+                              e.target.src = '/default-product.png';
+                            }}
+                          />
                         </div>
 
-                        {/* Price and Quantity Controls */}
-                        <div className="flex items-center justify-between flex-wrap gap-4">
-                          <div className="flex items-center space-x-4">
-                            <span className="text-sm text-gray-500">Price:</span>
-                            <span className="font-medium text-gray-900">₹{item.price.toFixed(2)}</span>
+                        {/* Item Details */}
+                        <div className="flex-1 sm:ml-6 space-y-4">
+                          {/* Name and Remove Button */}
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="text-lg font-semibold text-gray-900 hover:text-green-600 transition-colors duration-200">
+                                {item.name}
+                              </h3>
+                              <p className="mt-1 text-sm text-gray-500 capitalize">{item.category}</p>
+                              {typeof maxQuantity === 'number' && item.quantity >= maxQuantity && (
+                                <span className="inline-block mt-1 text-xs text-red-500 font-medium">
+                                  Only {maxQuantity} in stock
+                                </span>
+                              )}
+                            </div>
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => removeItem(item.id)}
+                              disabled={isDeleting === item.id}
+                              className="text-gray-400 hover:text-red-500 transition-colors duration-200"
+                            >
+                              {isDeleting === item.id ? (
+                                <div className="h-5 w-5 animate-spin rounded-full border-2 border-red-300 border-t-red-600" />
+                              ) : (
+                                <XMarkIcon className="h-5 w-5" />
+                              )}
+                            </motion.button>
                           </div>
 
-                          <div className="flex items-center space-x-2">
-                            <span className="text-sm text-gray-500">Quantity:</span>
-                            <div className="flex items-center bg-gray-50 rounded-lg border border-gray-200">
-                              <motion.button
-                                whileHover={{ backgroundColor: '#f3f4f6' }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
-                                disabled={updating === item.id || item.quantity <= 1}
-                                className="px-2 py-1 text-gray-600 hover:text-gray-800 disabled:opacity-50"
-                              >
-                                <MinusIcon className="h-4 w-4" />
-                              </motion.button>
-                              
-                              <span className="w-8 text-center font-medium text-gray-900">
-                                {updating === item.id ? (
-                                  <div className="h-4 w-4 mx-auto animate-spin rounded-full border-2 border-gray-300 border-t-green-600" />
-                                ) : (
-                                  item.quantity
-                                )}
-                              </span>
+                          {/* Price and Quantity Controls */}
+                          <div className="flex items-center justify-between flex-wrap gap-4">
+                            <div className="flex items-center space-x-4">
+                              <span className="text-sm text-gray-500">Price:</span>
+                              <span className="font-medium text-gray-900">₹{item.price.toFixed(2)}</span>
+                            </div>
 
-                              <motion.button
-                                whileHover={{ backgroundColor: '#f3f4f6' }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => updateQuantity(item.id, Math.min(50, item.quantity + 1))}
-                                disabled={updating === item.id || item.quantity >= 50}
-                                className="px-2 py-1 text-gray-600 hover:text-gray-800 disabled:opacity-50"
-                              >
-                                <PlusIcon className="h-4 w-4" />
-                              </motion.button>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-sm text-gray-500">Quantity:</span>
+                              <div className="flex items-center bg-gray-50 rounded-lg border border-gray-200">
+                                <motion.button
+                                  whileHover={{ backgroundColor: '#f3f4f6' }}
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                                  disabled={updating === item.id || item.quantity <= 1}
+                                  className="px-2 py-1 text-gray-600 hover:text-gray-800 disabled:opacity-50"
+                                >
+                                  <MinusIcon className="h-4 w-4" />
+                                </motion.button>
+                                
+                                <span className="w-8 text-center font-medium text-gray-900">
+                                  {updating === item.id ? (
+                                    <div className="h-4 w-4 mx-auto animate-spin rounded-full border-2 border-gray-300 border-t-green-600" />
+                                  ) : (
+                                    item.quantity
+                                  )}
+                                </span>
+
+                                <motion.button
+                                  whileHover={{ backgroundColor: '#f3f4f6' }}
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                  disabled={
+                                    updating === item.id ||
+                                    item.quantity >= 50 ||
+                                    (typeof maxQuantity === 'number' && item.quantity >= maxQuantity)
+                                  }
+                                  className="px-2 py-1 text-gray-600 hover:text-gray-800 disabled:opacity-50"
+                                >
+                                  <PlusIcon className="h-4 w-4" />
+                                </motion.button>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center space-x-4">
+                              <span className="text-sm text-gray-500">Total:</span>
+                              <span className="font-semibold text-green-600">
+                                ₹{(item.price * item.quantity).toFixed(2)}
+                              </span>
                             </div>
                           </div>
 
-                          <div className="flex items-center space-x-4">
-                            <span className="text-sm text-gray-500">Total:</span>
-                            <span className="font-semibold text-green-600">
-                              ₹{(item.price * item.quantity).toFixed(2)}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Special Request Section */}
-                        <div className="mt-4 border-t pt-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium text-gray-700">Special Request</span>
-                            {!editingRequest[item.id] && (
-                              <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => setEditingRequest(prev => ({ ...prev, [item.id]: true }))}
-                                className="text-green-600 hover:text-green-700"
-                              >
-                                <PencilIcon className="h-4 w-4" />
-                              </motion.button>
-                            )}
-                          </div>
-                          {editingRequest[item.id] ? (
-                            <div className="space-y-2">
-                              <textarea
-                                value={item.specialRequest}
-                                onChange={(e) => {
-                                  const newRequest = e.target.value;
-                                  if (newRequest.length <= 200) {
-                                    setCartItems(prev =>
-                                      prev.map(cartItem =>
-                                        cartItem.id === item.id
-                                          ? { ...cartItem, specialRequest: newRequest }
-                                          : cartItem
-                                      )
-                                    );
-                                  }
-                                }}
-                                placeholder="Add any special instructions (e.g., allergies, preferences)"
-                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
-                                rows={3}
-                              />
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">
-                                  {200 - (item.specialRequest?.length || 0)} characters remaining
-                                </span>
-                                <div className="space-x-2">
-                                  <button
-                                    onClick={() => {
-                                      setEditingRequest(prev => ({ ...prev, [item.id]: false }));
+                          {/* Special Request Section */}
+                          <div className="mt-4 border-t pt-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm font-medium text-gray-700">Special Request</span>
+                              {!editingRequest[item.id] && (
+                                <motion.button
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => setEditingRequest(prev => ({ ...prev, [item.id]: true }))}
+                                  className="text-green-600 hover:text-green-700"
+                                >
+                                  <PencilIcon className="h-4 w-4" />
+                                </motion.button>
+                              )}
+                            </div>
+                            {editingRequest[item.id] ? (
+                              <div className="space-y-2">
+                                <textarea
+                                  value={item.specialRequest}
+                                  onChange={(e) => {
+                                    const newRequest = e.target.value;
+                                    if (newRequest.length <= 200) {
                                       setCartItems(prev =>
                                         prev.map(cartItem =>
                                           cartItem.id === item.id
-                                            ? { ...cartItem, specialRequest: cartItem.specialRequest || '' }
+                                            ? { ...cartItem, specialRequest: newRequest }
                                             : cartItem
                                         )
                                       );
-                                    }}
-                                    className="px-3 py-1 text-sm text-gray-600 hover:text-gray-700"
-                                  >
-                                    Cancel
-                                  </button>
-                                  <button
-                                    onClick={() => updateSpecialRequest(item.id, item.specialRequest)}
-                                    className="px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700"
-                                  >
-                                    Save
-                                  </button>
+                                    }
+                                  }}
+                                  placeholder="Add any special instructions (e.g., allergies, preferences)"
+                                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
+                                  rows={3}
+                                />
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs text-gray-500">
+                                    {200 - (item.specialRequest?.length || 0)} characters remaining
+                                  </span>
+                                  <div className="space-x-2">
+                                    <button
+                                      onClick={() => {
+                                        setEditingRequest(prev => ({ ...prev, [item.id]: false }));
+                                        setCartItems(prev =>
+                                          prev.map(cartItem =>
+                                            cartItem.id === item.id
+                                              ? { ...cartItem, specialRequest: cartItem.specialRequest || '' }
+                                              : cartItem
+                                          )
+                                        );
+                                      }}
+                                      className="px-3 py-1 text-sm text-gray-600 hover:text-gray-700"
+                                    >
+                                      Cancel
+                                    </button>
+                                    <button
+                                      onClick={() => updateSpecialRequest(item.id, item.specialRequest)}
+                                      className="px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700"
+                                    >
+                                      Save
+                                    </button>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          ) : (
-                            <p className="text-sm text-gray-600">
-                              {item.specialRequest || 'No special instructions added'}
-                            </p>
-                          )}
+                            ) : (
+                              <p className="text-sm text-gray-600">
+                                {item.specialRequest || 'No special instructions added'}
+                              </p>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  );
+                })}
               </AnimatePresence>
             </div>
 

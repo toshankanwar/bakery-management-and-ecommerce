@@ -1,4 +1,3 @@
-// app/orders/page.jsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -27,7 +26,8 @@ import {
   ArrowDownTrayIcon,
   MapPinIcon,
   PhoneIcon,
-  BanknotesIcon
+  BanknotesIcon,
+  CalendarIcon
 } from '@heroicons/react/24/outline';
 import html2pdf from 'html2pdf.js';
 
@@ -123,6 +123,26 @@ const OrderCard = ({ order, isExpanded, onToggle, onDownloadInvoice }) => {
   const statusConfig = ORDER_STATUS_CONFIG[order.orderStatus];
   const StatusIcon = statusConfig.icon;
 
+  // Delivery date display logic
+  let deliveryDisplay;
+  if (order.deliveryType === 'today') {
+    deliveryDisplay = (
+      <span className="flex items-center gap-1">
+        <CalendarIcon className="h-4 w-4 text-gray-500" />
+        <span className="text-sm text-gray-700">Delivery: <span className="font-semibold text-green-700">Today</span></span>
+      </span>
+    );
+  } else if (order.deliveryType === 'choose' && order.deliveryDate) {
+    deliveryDisplay = (
+      <span className="flex items-center gap-1">
+        <CalendarIcon className="h-4 w-4 text-gray-500" />
+        <span className="text-sm text-gray-700">Delivery: <span className="font-semibold text-blue-700">{order.deliveryDate}</span></span>
+      </span>
+    );
+  } else {
+    deliveryDisplay = null;
+  }
+
   return (
     <motion.div
       layout
@@ -147,6 +167,10 @@ const OrderCard = ({ order, isExpanded, onToggle, onDownloadInvoice }) => {
               <p className="text-sm text-gray-500">
                 {new Date(order.createdAt).toLocaleString()}
               </p>
+              {/* Delivery display */}
+              {deliveryDisplay && (
+                <div className="mt-1">{deliveryDisplay}</div>
+              )}
             </div>
           </div>
           <div className="flex items-center space-x-4">
@@ -260,6 +284,17 @@ const OrderCard = ({ order, isExpanded, onToggle, onDownloadInvoice }) => {
                           ₹{order.total.toFixed(2)}
                         </span>
                       </div>
+                      {/* Delivery date in Payment Details for extra visibility */}
+                      {order.deliveryType && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Delivery</span>
+                          <span className="font-medium text-gray-900">
+                            {order.deliveryType === 'today'
+                              ? 'Today'
+                              : order.deliveryDate || ''}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -347,6 +382,14 @@ const OrdersPage = () => {
 
   const generateInvoice = async (order) => {
     try {
+      // Delivery date for invoice
+      let deliveryLabel = '';
+      if (order.deliveryType === 'today') {
+        deliveryLabel = 'Today';
+      } else if (order.deliveryType === 'choose' && order.deliveryDate) {
+        deliveryLabel = order.deliveryDate;
+      }
+
       // Create the invoice HTML content
       const invoiceHtml = `
         <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;">
@@ -360,6 +403,7 @@ const OrdersPage = () => {
             <h3 style="color: #1a1a1a; margin-bottom: 10px;">Order Status: ${ORDER_STATUS_CONFIG[order.orderStatus].text}</h3>
             <p style="color: #4b5563; margin: 5px 0;">Payment Method: ${order.paymentMethod === 'COD' ? 'Cash on Delivery' : 'UPI Payment'}</p>
             <p style="color: #4b5563; margin: 5px 0;">Payment Status: ${PAYMENT_STATUS_CONFIG[order.paymentStatus].text}</p>
+            <p style="color: #4b5563; margin: 5px 0;">Delivery: ${deliveryLabel}</p>
           </div>
   
           <div style="margin-bottom: 30px;">
