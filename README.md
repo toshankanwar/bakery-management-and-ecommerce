@@ -9,7 +9,7 @@ This app provides a seamless bakery shopping experience with user authentication
 You can try the Toshan Bakery web application live here:
 
 **[🌐 Toshan Bakery Demo](https://bakery.toshankanwar.website)**
-**[🌐 Admin Dashboard Demo](https://admin.bakery.toshankanwar.website)**
+**[🌐 Admin Dashboard Demo](https://admin.bakery.toshankanwar.website/login)**
 
 ## Table of Contents
 
