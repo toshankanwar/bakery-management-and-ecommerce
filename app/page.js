@@ -142,6 +142,7 @@ const HomePage = () => {
   ];
 
   return (
+    <PageWrapper>
     <div className="min-h-screen">
       {/* Hero Section */}
       <section className="relative h-[80vh] flex items-center justify-center overflow-hidden">
@@ -562,6 +563,7 @@ const HomePage = () => {
         </motion.div>
       </section>
     </div>
+    </PageWrapper>
   );
 };
 
