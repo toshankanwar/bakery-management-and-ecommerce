@@ -199,25 +199,64 @@ npm install
 firebase deploy --only functions
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## How the App Works
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. **Home Page:**  
+   Users see the latest products, categories, special offers, and testimonials.
+2. **Catalog:**  
+   All products are shown, navigable by slug-based URLs (`/product/<slug>`).
+3. **Cart & Checkout:**  
+   Authenticated users add items to cart, proceed to checkout, choose delivery type (today/choose date), fill address, and select payment method.
+4. **Order Placement:**  
+   On order, stock is checked, orders collection is updated, and cart items are removed.
+5. **Order Management:**  
+   Users see their order history and can download invoices as PDF.
+6. **Admin (in code):**  
+   Admins can add/edit/delete products, categories.
+7. **Automatic Stock Update:**  
+   After order, bakery item quantity is reduced automatically via Cloud Function.
+8. **Security:**  
+   Firestore rules ensure safe and role-based access for all operations.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## Screenshots
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+![image](https://github.com/user-attachments/assets/a75a9205-bce5-48a3-b06c-493e73a787fc)
+![WhatsApp Image 2025-06-20 at 01 43 34_b63de603](https://github.com/user-attachments/assets/c4afaa5a-9970-49f4-8e51-ea3c5a4dc4a2)
+![WhatsApp Image 2025-06-20 at 01 43 34_7cb46860](https://github.com/user-attachments/assets/9e3305e4-ae20-41bf-a2e7-0cca0c343af8)
+![image](https://github.com/user-attachments/assets/0fd39e32-9779-4538-9179-606fdc7837dd)
+![image](https://github.com/user-attachments/assets/aaf9238f-505a-48f4-8a15-0484b79a4422)
+![image](https://github.com/user-attachments/assets/144cf184-6b84-4e92-af12-5ffeb8561934)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Contributing
+
+1. Fork this repository
+2. Create a branch: `git checkout -b feature/your-feature`
+3. Commit your changes: `git commit -m 'Add some feature'`
+4. Push to the branch: `git push origin feature/your-feature`
+5. Open a Pull Request
+
+---
+
+## Contact
+
+For questions, support, or business inquiries, please reach out to us at:
+
+**Email:** [contact@toshankanwar.website](mailto:contact@toshankanwar.website)
+
+---
+
+## License
+
+[MIT](LICENSE)
+
+---
 
 **Made with ❤️ by Toshan Bakery Team**
