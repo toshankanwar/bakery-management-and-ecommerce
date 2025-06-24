@@ -5,15 +5,15 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://bakery.toshankanwar.websit/shop</loc>
+    <loc>https://bakery.toshankanwar.website/shop</loc>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://your-domain.com/about</loc>
+    <loc>https://bakery.toshankanwar.website/about</loc>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://your-domain.com/login</loc>
+    <loc>https://bakery.toshankanwar.website/login</loc>
     <priority>0.8</priority>
   </url>
   <url>
