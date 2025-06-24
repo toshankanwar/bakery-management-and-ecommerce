@@ -15,6 +15,7 @@ import {
   PhoneIcon,
   ClockIcon
 } from '@heroicons/react/24/outline';
+import PageWrapper from '@/components/PageWrapper';
 
 // Utility to generate slug from product name
 function slugify(str) {
