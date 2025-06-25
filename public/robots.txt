@@ -4,4 +4,4 @@ Disallow: /cart/
 Disallow: /checkout/
 Allow: /
 
-Sitemap: https://your-domain.com/sitemap.xml
+Sitemap: https://bakery.toshankanwar.website/sitemap.xml
