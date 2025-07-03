@@ -52,6 +52,7 @@ function MetadataHead({ title }) {
       <meta name="keywords" content="bakery, Toshan Bakery, cakes, pastries, breads, cookies, fresh, custom cakes, online bakery, sweets, desserts, delivery, order online" />
       <meta name="author" content="Toshan Bakery" />
       <meta property="og:title" content={title} />
+      <meta property="og:site_name" content="Toshan Bakery"/>
       <meta property="og:description" content="Order fresh cakes, pastries, and breads from Toshan Bakery. Delicious treats for every occasion. Delivery and pickup available." />
       <meta property="og:type" content="website" />
       <meta property="og:url" content="https://bakery.toshankanwar.website/"/>
