@@ -418,25 +418,25 @@ const OrdersPage = () => {
           </div>
   
           <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
-            <thead>
-              <tr style="background-color: #f3f4f6;">
-                <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb;">Item</th>
-                <th style="padding: 12px; text-align: center; border-bottom: 2px solid #e5e7eb;">Quantity</th>
-                <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e5e7eb;">Price</th>
-                <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e5e7eb;">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${order.items.map(item => `
-                <tr>
-                  <td style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb;">${item.name}</td>
-                  <td style="padding: 12px; text-align: center; border-bottom: 1px solid #e5e7eb;">${item.quantity}</td>
-                  <td style="padding: 12px; text-align: right; border-bottom: 1px solid #e5e7eb;">₹${item.price.toFixed(2)}</td>
-                  <td style="padding: 12px; text-align: right; border-bottom: 1px solid #e5e7eb;">₹${(item.price * item.quantity).toFixed(2)}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
+  <thead>
+    <tr style="background-color: #f3f4f6;">
+      <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb; color: #4b5563;">Item</th>
+      <th style="padding: 12px; text-align: center; border-bottom: 2px solid #e5e7eb; color: #4b5563;">Quantity</th>
+      <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e5e7eb; color: #4b5563;">Price</th>
+      <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e5e7eb; color: #4b5563;">Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${order.items.map(item => `
+      <tr>
+        <td style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; color: #4b5563;">${item.name}</td>
+        <td style="padding: 12px; text-align: center; border-bottom: 1px solid #e5e7eb; color: #4b5563;">${item.quantity}</td>
+        <td style="padding: 12px; text-align: right; border-bottom: 1px solid #e5e7eb; color: #4b5563;">₹${item.price.toFixed(2)}</td>
+        <td style="padding: 12px; text-align: right; border-bottom: 1px solid #e5e7eb; color: #4b5563;">₹${(item.price * item.quantity).toFixed(2)}</td>
+      </tr>
+    `).join('')}
+  </tbody>
+</table>
   
           <div style="text-align: right; margin-top: 20px; padding: 20px; background-color: #f9fafb; border-radius: 8px;">
             <p style="color: #4b5563; margin: 5px 0;">Subtotal: ₹${order.subtotal.toFixed(2)}</p>
