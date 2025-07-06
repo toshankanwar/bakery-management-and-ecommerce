@@ -27,7 +27,6 @@ import {
 import { useAuthContext } from '@/contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
-import PageWrapper from '@/components/PageWrapper';
 
 const DeliveryAlert = ({ cartItems }) => {
   const [position, setPosition] = useState(-100);
@@ -312,7 +311,6 @@ const CartPage = () => {
   }
 
   return (
-    <PageWrapper>
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between mb-8">
@@ -603,7 +601,7 @@ const CartPage = () => {
         )}
       </div>
     </div>
-    </PageWrapper>
+    
   );
 };
 
