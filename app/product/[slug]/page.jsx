@@ -1,11 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { collection, getDocs, query, where, limit, doc, getDoc, setDoc } from 'firebase/firestore';
+import { 
+  collection, getDocs, query, where, limit, doc, getDoc, setDoc 
+} from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import Image from 'next/image';
-import { MinusIcon, PlusIcon, ShoppingCartIcon, StarIcon } from '@heroicons/react/24/outline';
+import { 
+  MinusIcon, PlusIcon, ShoppingCartIcon, StarIcon
+} from '@heroicons/react/24/outline';
 import { useAuthContext } from '@/contexts/AuthContext';
 
 // Slugify utility
@@ -16,6 +20,35 @@ const toSlug = (str) =>
     .trim()
     .replace(/[\s_-]+/g, '-')
     .replace(/^-+|-+$/g, '');
+
+// Helper to fetch user displayName from users/{uid} doc
+const getUserName = async (uid) => {
+  if (!uid) return '';
+  try {
+    const userRef = doc(db, 'users', uid);
+    const snap = await getDoc(userRef);
+    if (snap.exists()) {
+      const data = snap.data();
+      return data.displayName || data.name || '';
+    }
+  } catch {
+    return '';
+  }
+  return '';
+};
+
+// --- Format date to "hh:mm AM/PM, DD/MM/YYYY" ---
+function formatDateTime(dateInput) {
+  if (!dateInput) return '';
+  const date = new Date(dateInput);
+  const hours = date.getHours() % 12 || 12;
+  const ampm = date.getHours() >= 12 ? 'PM' : 'AM';
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear();
+  return `${hours}:${minutes} ${ampm}, ${day}/${month}/${year}`;
+}
 
 export default function ProductPage() {
   const { slug } = useParams();
@@ -28,6 +61,10 @@ export default function ProductPage() {
   const [loading, setLoading] = useState(true);
   const [cartLoading, setCartLoading] = useState(false);
   const [cartError, setCartError] = useState('');
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [reviewsPage, setReviewsPage] = useState(1);
+  const [hasMoreReviews, setHasMoreReviews] = useState(false);
 
   // Fetch product by slug
   useEffect(() => {
@@ -91,50 +128,104 @@ export default function ProductPage() {
     // eslint-disable-next-line
   }, [product && product.id, user?.uid]);
 
-  // Add/update item in user's cart
-  const updateCart = async (newQty) => {
-    setCartError('');
-    if (!product) return;
-    if (!user?.uid) {
-      setCartError('Please login to add to cart.');
+  // --- Fetch Reviews for this product with pagination ---
+  useEffect(() => {
+    if (!product?.id) {
+      setReviews([]);
+      setReviewsLoading(false);
       return;
     }
-    // Prevent adding to cart if product.quantity is 0
-    if (product.quantity === 0) {
-      setCartError('This item is out of stock.');
-      return;
-    }
-    if (newQty < 1) return;
-    if (newQty > product.quantity) {
-      setCartError(`Only ${product.quantity} in stock.`);
-      return;
-    }
+    const fetchReviews = async () => {
+      setReviewsLoading(true);
+      try {
+        const reviewLimit = 10;
+        const reviewsRef = collection(db, 'reviews');
+        const q = query(
+          reviewsRef,
+          where('itemId', '==', product.id),
+          limit(reviewsPage * reviewLimit)
+        );
+        const snap = await getDocs(q);
+        let reviewArr = snap.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
 
+        // Fetch user names for reviews
+        const userMap = {};
+        await Promise.all(
+          reviewArr.map(async (r) => {
+            if (r.userId && !r.userName) {
+              if (userMap[r.userId]) {
+                r.userName = userMap[r.userId];
+              } else {
+                r.userName = await getUserName(r.userId);
+                userMap[r.userId] = r.userName;
+              }
+            }
+          })
+        );
+
+        setReviews(reviewArr);
+        setHasMoreReviews(reviewArr.length === reviewsPage * reviewLimit);
+      } catch {
+        setReviews([]);
+        setHasMoreReviews(false);
+      }
+      setReviewsLoading(false);
+    };
+    fetchReviews();
+    // eslint-disable-next-line
+  }, [product?.id, reviewsPage]);
+
+  // --- Calculate average rating ---
+  const averageRating = useMemo(() => {
+    if (!reviews || reviews.length === 0) return 0;
+    const sum = reviews.reduce((acc, r) => acc + (r.rating || 0), 0);
+    return (sum / reviews.length).toFixed(1);
+  }, [reviews]);
+
+  // --- Load more reviews ---
+  const handleLoadMoreReviews = () => {
+    setReviewsPage((prev) => prev + 1);
+  };
+
+  // --- Cart actions ---
+  const updateCart = async (newQty) => {
+    if (!user?.uid || !product?.id) return;
     setCartLoading(true);
+    setCartError('');
     try {
-      const cartItemRef = doc(db, 'carts', user.uid, 'items', product.id);
-      const cartItemData = {
-        productId: product.id,
-        name: product.name,
-        price: product.price,
-        quantity: newQty,
-        image: product.imageUrl,
-        category: product.category || '',
-        addedAt: cartItem?.addedAt || new Date(),
-      };
-      await setDoc(cartItemRef, {
-        ...cartItemData,
-        addedAt: cartItem?.addedAt || new Date(),
-      });
-      setCartItem({ ...cartItemData, addedAt: cartItem?.addedAt || new Date() });
-      setQuantity(newQty);
+      if (newQty < 1) {
+        // Remove from cart by setting quantity to 0 (or implement remove logic)
+        await setDoc(
+          doc(db, 'carts', user.uid, 'items', product.id),
+          {},
+          { merge: true }
+        );
+        setCartItem(null);
+        setQuantity(1);
+      } else {
+        await setDoc(
+          doc(db, 'carts', user.uid, 'items', product.id),
+          {
+            ...product,
+            quantity: newQty,
+            itemId: product.id,
+            userId: user.uid,
+            updatedAt: new Date().toISOString(),
+          }
+        );
+        setCartItem({ ...product, quantity: newQty, itemId: product.id, userId: user.uid });
+        setQuantity(newQty);
+      }
     } catch (err) {
-      setCartError('Insufficient permissions or network error. Please check your access or login again.');
-      if (!user?.uid) setTimeout(() => router.push('/login'), 1500);
+      setCartError('Could not update cart. Please try again.');
     }
     setCartLoading(false);
   };
 
+  // --- Responsive UI ---
   if (loading || authLoading) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-gradient-to-tr from-green-100 via-white to-green-100">
@@ -254,29 +345,85 @@ export default function ProductPage() {
       </section>
 
       {/* Reviews Section */}
-      <section className="max-w-4xl mx-auto bg-white/95 shadow-2xl rounded-3xl p-10 mb-10 mt-0">
-        <h2 className="text-2xl font-bold text-green-800 mb-8">Reviews</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-7 mt-3">
-          {[1, 2].map((_, i) => (
-            <div
-              key={i}
-              className="rounded-2xl bg-gradient-to-br from-green-100 via-white to-green-200 p-8 flex flex-col gap-4 shadow-lg hover:shadow-2xl border border-green-200 hover:border-green-500 transition group cursor-pointer relative overflow-hidden"
-            >
-              <div className="absolute -top-8 -left-8 opacity-20 group-hover:opacity-40 transition">
-                <StarIcon className="w-32 h-32 text-green-300" />
-              </div>
-              <div className="flex items-center gap-2 z-10">
-                {[...Array(5)].map((_, s) => (
-                  <StarIcon key={s} className="w-6 h-6 text-green-400 group-hover:text-green-600 transition" />
-                ))}
-              </div>
-              <div className="font-semibold text-green-800 text-lg z-10">Coming Soon</div>
-              <div className="text-gray-500 italic text-base z-10">
-                Product reviews and customer feedback will be displayed here. Stay tuned!
-              </div>
+      <section className="max-w-4xl mx-auto bg-white/95 shadow-2xl rounded-3xl p-8 mb-10 mt-0">
+        <h2 className="text-2xl font-bold text-green-800 mb-6">Customer Reviews</h2>
+        <div className="flex flex-col sm:flex-row items-center gap-7 mb-8">
+          <div className="flex items-center gap-2">
+            <span className="text-3xl font-bold text-green-700">{averageRating}</span>
+            <div className="flex gap-1">
+              {[...Array(5)].map((_, i) => (
+                <StarIcon
+                  key={i}
+                  className={`w-6 h-6 ${averageRating >= i + 1 ? 'text-yellow-400' : 'text-gray-200'}`}
+                  aria-label={i < Math.round(averageRating) ? "star filled" : "star"}
+                />
+              ))}
             </div>
-          ))}
+            <span className="ml-2 text-gray-600 font-medium">
+              {reviews.length} {reviews.length === 1 ? 'Review' : 'Reviews'}
+            </span>
+          </div>
         </div>
+        {/* Row-based Block Reviews UI, paginated */}
+        <div className="space-y-6">
+          {reviewsLoading ? (
+            <div className="flex justify-center py-10">
+              <span className="text-green-700 animate-pulse text-lg">Loading reviews...</span>
+            </div>
+          ) : reviews.length === 0 ? (
+            <div className="flex flex-col items-center py-10">
+              <StarIcon className="w-14 h-14 text-green-200 mb-3" />
+              <span className="font-semibold text-green-700 text-xl mb-1">No reviews yet</span>
+              <span className="text-gray-500 text-base">Be the first to review this product!</span>
+            </div>
+          ) : (
+            reviews.map((r, idx) => (
+              <div
+                key={r.id}
+                className="flex flex-col sm:flex-row gap-5 items-center bg-gradient-to-r from-green-50 via-white to-green-100 border border-green-100 hover:border-green-300 shadow-md hover:shadow-lg rounded-xl p-7 transition group"
+              >
+                <div className="flex flex-row items-center min-w-[180px] gap-2 mb-2 sm:mb-0">
+                  <span className="font-semibold text-green-800 text-base text-center break-words">
+                    {r.userName && r.userName.trim().length > 0
+                      ? r.userName
+                      : r.userId?.slice(0, 8) || "Anonymous"}
+                  </span>
+                  <span className="ml-2 text-xs text-gray-400">{formatDateTime(r.createdAt)}</span>
+                </div>
+                <div className="flex-1 flex flex-col gap-2">
+                  <div className="flex items-center gap-1">
+                    {[...Array(5)].map((_, s) => (
+                      <StarIcon
+                        key={s}
+                        className={`w-5 h-5 ${r.rating >= s + 1 ? 'text-yellow-400' : 'text-gray-200'}`}
+                      />
+                    ))}
+                    <span className="ml-2 text-sm text-gray-600">{r.rating}/5</span>
+                  </div>
+                  <div className="text-gray-800 font-medium text-lg break-words">{r.reviewText}</div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+        {hasMoreReviews && (
+          <div className="flex justify-center mt-8">
+            <button
+              className="px-6 py-3 rounded-xl bg-green-600 text-white font-semibold shadow hover:bg-green-700 transition-all flex items-center"
+              onClick={handleLoadMoreReviews}
+              disabled={reviewsLoading}
+            >
+              {reviewsLoading ? (
+                <span className="flex items-center gap-2">
+                  <span className="animate-spin h-5 w-5 border-2 border-white border-t-green-300 rounded-full mr-1"></span>
+                  Loading...
+                </span>
+              ) : (
+                "Load More Reviews"
+              )}
+            </button>
+          </div>
+        )}
       </section>
       <style jsx global>{`
         @keyframes fadeIn {

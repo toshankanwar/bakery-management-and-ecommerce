@@ -83,35 +83,40 @@ const ShopPage = () => {
     }
   }, [cart]);
 
+  // --- Fetch Products ---
   const fetchProducts = async () => {
     try {
       setLoading(true);
       const productsRef = collection(db, 'bakeryItems');
       let queryConstraints = [];
 
+      // Only order by fields indexed in Firestore
       if (selectedCategory !== 'all') {
         queryConstraints.push(where('category', '==', selectedCategory));
       }
 
+      // For sorting, only add orderBy for fields that are indexed
+      // For 'newest' and 'oldest', use 'createdAt'
       switch (sortBy) {
         case 'priceAsc':
           queryConstraints.push(orderBy('price', 'asc'));
-          queryConstraints.push(orderBy('__name__', 'asc'));
           break;
         case 'priceDesc':
           queryConstraints.push(orderBy('price', 'desc'));
-          queryConstraints.push(orderBy('__name__', 'desc'));
           break;
         case 'nameAsc':
           queryConstraints.push(orderBy('name', 'asc'));
-          queryConstraints.push(orderBy('__name__', 'asc'));
           break;
         case 'nameDesc':
           queryConstraints.push(orderBy('name', 'desc'));
-          queryConstraints.push(orderBy('__name__', 'desc'));
           break;
+        case 'oldest':
+          queryConstraints.push(orderBy('createdAt', 'asc'));
+          break;
+        case 'newest':
         default:
           queryConstraints.push(orderBy('createdAt', 'desc'));
+          break;
       }
 
       const q = query(productsRef, ...queryConstraints);
@@ -122,6 +127,7 @@ const ShopPage = () => {
         ...doc.data(),
       }));
 
+      // Filter by price range and availability after fetching
       let filtered = fetchedProducts.filter(product =>
         product.price >= priceRange[0] && product.price <= priceRange[1]
       );
@@ -137,8 +143,8 @@ const ShopPage = () => {
         inStock: fetchedProducts.filter(p => p.inStock).length,
         outOfStock: fetchedProducts.filter(p => !p.inStock).length,
         priceRange: {
-          min: Math.min(...fetchedProducts.map(p => p.price)),
-          max: Math.max(...fetchedProducts.map(p => p.price)),
+          min: fetchedProducts.length ? Math.min(...fetchedProducts.map(p => p.price)) : 0,
+          max: fetchedProducts.length ? Math.max(...fetchedProducts.map(p => p.price)) : 1000,
         },
       };
 
@@ -250,7 +256,6 @@ const ShopPage = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      
       {/* Sticky Header */}
       <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm shadow-sm">
         <div className="max-w-7xl mx-auto">

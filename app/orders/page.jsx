@@ -12,7 +12,8 @@ import {
   where, 
   orderBy, 
   getDocs, 
-  limit 
+  limit,
+  addDoc
 } from 'firebase/firestore';
 import { toast } from 'react-hot-toast';
 import { 
@@ -27,7 +28,8 @@ import {
   MapPinIcon,
   PhoneIcon,
   BanknotesIcon,
-  CalendarIcon
+  CalendarIcon,
+  PencilSquareIcon
 } from '@heroicons/react/24/outline';
 import html2pdf from 'html2pdf.js';
 
@@ -94,7 +96,110 @@ const PAYMENT_STATUS_CONFIG = {
   }
 };
 
-const OrderItem = ({ item }) => (
+// --- Review Modal ---
+const ReviewModal = ({ open, onClose, item, orderId, userId }) => {
+  const [rating, setRating] = useState(0);
+  const [reviewText, setReviewText] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    if (rating < 1 || rating > 5) {
+      toast.error("Please select a rating.");
+      return;
+    }
+    if (!reviewText.trim()) {
+      toast.error("Please write a review.");
+      return;
+    }
+    setLoading(true);
+
+    try {
+      await addDoc(collection(db, 'reviews'), {
+        itemId: item.id,
+        orderId,
+        userId,
+        itemName: item.name,
+        rating,
+        reviewText,
+        createdAt: new Date().toISOString()
+      });
+      toast.success("Review submitted. Thank you!");
+      onClose();
+    } catch (err) {
+      console.error("Error submitting review:", err);
+      toast.error("Failed to submit review.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.97 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.97 }}
+        className="bg-white rounded-xl shadow-lg max-w-md w-full p-6"
+      >
+        <h2 className="text-lg font-bold mb-2 text-gray-900">
+          Write a review for <span className="text-green-600">{item.name}</span>
+        </h2>
+        <form onSubmit={handleSubmitReview} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Rating</label>
+            <div className="flex gap-2">
+              {[1,2,3,4,5].map(star => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setRating(star)}
+                  className={`h-8 w-8 rounded-full border transition-colors ${star <= rating ? 'bg-yellow-400 border-yellow-400' : 'bg-gray-100 border-gray-300'}`}
+                  aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
+                >
+                  ★
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Review</label>
+            <textarea
+              value={reviewText}
+              onChange={e => setReviewText(e.target.value)}
+              className="w-full border rounded-md p-2 resize-none focus:ring-green-500 focus:border-green-500"
+              rows={4}
+              required
+              placeholder="Share your experience with this item..."
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200"
+              disabled={loading}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 rounded-md bg-green-600 text-white hover:bg-green-700"
+              disabled={loading}
+            >
+              Submit Review
+            </button>
+          </div>
+        </form>
+      </motion.div>
+    </div>
+  );
+};
+
+// --- Order Item ---
+const OrderItem = ({ item, canReview, onOpenReview }) => (
   <div className="flex items-center space-x-4">
     <div className="relative h-16 w-16 rounded-md overflow-hidden flex-shrink-0">
       <Image
@@ -113,13 +218,32 @@ const OrderItem = ({ item }) => (
         </p>
       )}
     </div>
-    <div className="text-sm font-medium text-gray-900">
-      ₹{(item.price * item.quantity).toFixed(2)}
+    <div className="flex items-center gap-2">
+      <div className="text-sm font-medium text-gray-900">
+        ₹{(item.price * item.quantity).toFixed(2)}
+      </div>
+      {canReview && (
+        <button
+          onClick={() => onOpenReview(item)}
+          className="ml-2 px-2 py-1 rounded bg-green-50 text-green-700 hover:bg-green-100 flex items-center gap-1 text-xs font-semibold"
+          title="Write Review"
+        >
+          <PencilSquareIcon className="w-4 h-4" />
+          Review
+        </button>
+      )}
     </div>
   </div>
 );
 
-const OrderCard = ({ order, isExpanded, onToggle, onDownloadInvoice }) => {
+const OrderCard = ({
+  order,
+  isExpanded,
+  onToggle,
+  onDownloadInvoice,
+  canReview,
+  onOpenReview
+}) => {
   const statusConfig = ORDER_STATUS_CONFIG[order.orderStatus];
   const StatusIcon = statusConfig.icon;
 
@@ -214,7 +338,12 @@ const OrderCard = ({ order, isExpanded, onToggle, onDownloadInvoice }) => {
                 </h4>
                 <div className="space-y-4">
                   {order.items.map((item) => (
-                    <OrderItem key={item.id} item={item} />
+                    <OrderItem
+                      key={item.id}
+                      item={item}
+                      canReview={canReview}
+                      onOpenReview={onOpenReview}
+                    />
                   ))}
                 </div>
               </div>
@@ -301,7 +430,7 @@ const OrderCard = ({ order, isExpanded, onToggle, onDownloadInvoice }) => {
               </div>
 
               {/* Actions */}
-              <div className="flex justify-end pt-4 border-t">
+              <div className="flex justify-end pt-4 border-t gap-2">
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -331,6 +460,7 @@ const OrdersPage = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [reviewModal, setReviewModal] = useState({ open: false, item: null, orderId: null });
   const ordersPerPage = 5;
 
   useEffect(() => {
@@ -494,6 +624,18 @@ const OrdersPage = () => {
     }
   };
 
+  // Only allow reviews for delivered orders
+  const canReviewOrder = (order) => order.orderStatus === 'delivered';
+
+  // Open review modal for item
+  const handleOpenReview = (item, orderId) => {
+    setReviewModal({ open: true, item, orderId });
+  };
+
+  const handleCloseReview = () => {
+    setReviewModal({ open: false, item: null, orderId: null });
+  };
+
   const filteredOrders = filterStatus === 'all' 
     ? orders 
     : orders.filter(order => order.orderStatus === filterStatus);
@@ -577,6 +719,8 @@ const OrdersPage = () => {
                   expandedOrder === order.id ? null : order.id
                 )}
                 onDownloadInvoice={generateInvoice}
+                canReview={canReviewOrder(order)}
+                onOpenReview={(item) => handleOpenReview(item, order.id)}
               />
             ))}
 
@@ -601,6 +745,17 @@ const OrdersPage = () => {
               </div>
             )}
           </div>
+        )}
+
+        {/* Review Modal */}
+        {reviewModal.open && (
+          <ReviewModal
+            open={reviewModal.open}
+            onClose={handleCloseReview}
+            item={reviewModal.item}
+            orderId={reviewModal.orderId}
+            userId={user?.uid}
+          />
         )}
       </div>
     </div>
