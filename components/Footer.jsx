@@ -5,11 +5,45 @@ import { motion } from 'framer-motion';
 import {
   PhoneIcon,
   EnvelopeIcon,
-  MapPinIcon,
-  FacebookIcon,
-  InstagramIcon,
-  TwitterIcon
+  MapPinIcon
 } from '@heroicons/react/24/outline';
+
+// Social Icon SVGs
+const socialIcons = {
+  facebook: (
+    <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M22.675 0h-21.35C.597 0 0 .597 0 1.326v21.348C0 23.403.597 24 1.326 24h11.494v-9.294H9.691V11.41h3.129V8.797c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.797.143v3.24l-1.92.001c-1.504 0-1.797.715-1.797 1.763v2.314h3.587l-.467 3.296h-3.12V24h6.116C23.403 24 24 23.403 24 22.674V1.326C24 .597 23.403 0 22.675 0"/>
+    </svg>
+  ),
+  github: (
+    <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.045-3.338.724-4.042-1.416-4.042-1.416-.546-1.385-1.333-1.754-1.333-1.754-1.089-.745.083-.729.083-.729 1.205.085 1.84 1.236 1.84 1.236 1.072 1.835 2.809 1.305 3.495.998.109-.775.419-1.305.762-1.605-2.665-.304-5.466-1.332-5.466-5.93 0-1.31.469-2.381 1.236-3.221-.123-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23a11.51 11.51 0 013.003-.404c1.018.005 2.045.138 3.003.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.119 3.176.77.84 1.236 1.911 1.236 3.221 0 4.609-2.803 5.624-5.475 5.921.43.372.823 1.102.823 2.222 0 1.604-.014 2.896-.014 3.289 0 .322.218.694.825.576C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+    </svg>
+  ),
+  youtube: (
+    <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M23.498 6.186a2.997 2.997 0 00-2.109-2.118C19.078 3.5 12 3.5 12 3.5s-7.078 0-9.389.567a2.997 2.997 0 00-2.109 2.118A31.8 31.8 0 000 12a31.8 31.8 0 00.502 5.814 2.997 2.997 0 002.109 2.118C4.922 20.5 12 20.5 12 20.5s7.078 0 9.389-.567a2.997 2.997 0 002.109-2.118A31.8 31.8 0 0024 12a31.8 31.8 0 00-.502-5.814zM9.545 15.568V8.432l6.545 3.568-6.545 3.568z"/>
+    </svg>
+  ),
+};
+
+const socialLinks = [
+  {
+    name: 'Facebook',
+    url: 'https://www.facebook.com/toshan.kanwar.73',
+    icon: socialIcons.facebook,
+  },
+  {
+    name: 'GitHub',
+    url: 'https://github.com/toshankanwar',
+    icon: socialIcons.github,
+  },
+  {
+    name: 'YouTube',
+    url: 'https://www.youtube.com/@ToshanKanwarOfficials',
+    icon: socialIcons.youtube,
+  },
+];
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -72,7 +106,7 @@ const Footer = () => {
               Quick Links
             </motion.h3>
             <motion.div variants={containerVariants} className="space-y-2">
-              {['About', 'shop', 'Special Orders', 'Careers'].map((item) => (
+              {['About', 'Shop', 'Special Orders', 'Careers'].map((item) => (
                 <motion.div key={item} variants={itemVariants}>
                   <Link 
                     href={`/${item.toLowerCase().replace(' ', '-')}`}
@@ -153,74 +187,66 @@ const Footer = () => {
         >
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <motion.div variants={itemVariants} className="flex space-x-6">
-              {['Facebook', 'Twitter', 'Instagram'].map((social) => (
+              {socialLinks.map(({ name, url, icon }) => (
                 <motion.a
-                  key={social}
-                  href={`#${social.toLowerCase()}`}
-                  whileHover={{ scale: 1.1 }}
+                  key={name}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  whileHover={{ scale: 1.15 }}
                   whileTap={{ scale: 0.95 }}
-                  className="text-gray-600 hover:text-green-600 transition-colors"
+                  className="text-gray-600 hover:text-green-600 transition-colors flex items-center"
                 >
-                  <span className="sr-only">{social}</span>
-                  <svg
-                    className="h-6 w-6"
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
-                  </svg>
+                  <span className="sr-only">{name}</span>
+                  {icon}
                 </motion.a>
               ))}
             </motion.div>
             <motion.p variants={itemVariants} className="text-sm text-gray-600 flex flex-col sm:flex-row items-center justify-center gap-1 text-center">
-  <span className="flex flex-wrap items-center justify-center gap-1">
-    Designed & Developed with{" "}
-    <svg 
-      className="w-4 h-4 mx-1 text-red-500 animate-pulse" 
-      fill="currentColor" 
-      viewBox="0 0 24 24"
-    >
-      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-    </svg>
-    by{" "}
-    <a 
-      href="https://toshankanwar.website" 
-      target="_blank" 
-      rel="noopener noreferrer" 
-      className="font-medium text-green-600 hover:text-green-700 transition-colors hover:underline"
-    >
-      Toshan Kanwar
-    </a>
-  </span>
-  <span className="text-xs text-gray-500 mt-1 sm:mt-0">
-    <span className="hidden sm:inline mx-1">•</span>
-    Built with{" "}
-    <a 
-      href="https://nextjs.org" 
-      target="_blank" 
-      rel="noopener noreferrer" 
-      className="text-gray-600 hover:text-gray-800 transition-colors"
-    >
-      Next.js
-    </a>
-    {" 13 "}+{" and "}
-    <a 
-      href="https://firebase.google.com" 
-      target="_blank" 
-      rel="noopener noreferrer" 
-      className="text-gray-600 hover:text-gray-800 transition-colors"
-    >
-      Firebase
-    </a>
-    {" "}• Mobile First • Responsive
-  </span>
-  <span className="hidden sm:inline mx-1">•</span>
-  <span>© {currentYear} Toshan Bakery. All rights reserved.</span>
-</motion.p>
+              <span className="flex flex-wrap items-center justify-center gap-1">
+                Designed & Developed with{" "}
+                <svg 
+                  className="w-4 h-4 mx-1 text-red-500 animate-pulse" 
+                  fill="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                </svg>
+                by{" "}
+                <a 
+                  href="https://toshankanwar.website" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="font-medium text-green-600 hover:text-green-700 transition-colors hover:underline"
+                >
+                  Toshan Kanwar
+                </a>
+              </span>
+              <span className="text-xs text-gray-500 mt-1 sm:mt-0">
+                <span className="hidden sm:inline mx-1">•</span>
+                Built with{" "}
+                <a 
+                  href="https://nextjs.org" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-gray-600 hover:text-gray-800 transition-colors"
+                >
+                  Next.js
+                </a>
+                {" 13 "}+{" and "}
+                <a 
+                  href="https://firebase.google.com" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-gray-600 hover:text-gray-800 transition-colors"
+                >
+                  Firebase
+                </a>
+                {" "}• Mobile First • Responsive
+              </span>
+              <span className="hidden sm:inline mx-1">•</span>
+              <span>© {currentYear} Toshan Bakery. All rights reserved.</span>
+            </motion.p>
           </div>
         </motion.div>
       </div>
