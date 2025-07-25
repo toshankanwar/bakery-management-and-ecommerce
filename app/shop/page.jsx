@@ -12,6 +12,9 @@ import {
   orderBy,
   doc,
   getDoc,
+  setDoc,
+  deleteDoc,
+  onSnapshot,
 } from 'firebase/firestore';
 import Image from 'next/image';
 import {
@@ -19,9 +22,12 @@ import {
   XMarkIcon,
   ChevronDownIcon,
   Bars3Icon,
+  HeartIcon,
 } from '@heroicons/react/24/outline';
+import { HeartIcon as SolidHeartIcon } from '@heroicons/react/24/solid';
 import useCart from '@/hooks/useCart';
 import { Toaster, toast } from 'react-hot-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 const ShopPage = () => {
   const [products, setProducts] = useState([]);
@@ -36,7 +42,12 @@ const ShopPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [cartQuantities, setCartQuantities] = useState({});
   const { handleAddToCart, cart } = useCart();
+  const { user } = useAuth();
 
+  // Favourites state
+  const [favourites, setFavourites] = useState([]); // array of itemIds
+
+  // Helper to slugify product name
   const toSlug = (str) =>
     str
       .toLowerCase()
@@ -72,7 +83,60 @@ const ShopPage = () => {
 
   const itemsPerPageOptions = [10, 20, 30, 50];
 
-  // Keep cart state in sync
+  // --- Favourites Firestore Logic ---
+  useEffect(() => {
+    if (!user) {
+      setFavourites([]);
+      return;
+    }
+    // Listen to /favourites/{userId}/items subcollection
+    const favItemsRef = collection(db, 'favourites', user.uid, 'items');
+    const q = query(favItemsRef);
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setFavourites(snapshot.docs.map(doc => doc.id)); // Array of itemIds
+    });
+    return () => unsubscribe();
+  }, [user]);
+
+  // Add item to favourites
+  const handleAddFavourite = async (product) => {
+    if (!user) {
+      toast.error('Please log in to add favourites');
+      return;
+    }
+    try {
+      // /favourites/{userId}/items/{itemId}
+      await setDoc(doc(db, 'favourites', user.uid, 'items', product.id), {
+        addedAt: new Date(),
+        productId: product.id,
+        ...product,
+      });
+      toast.success('Added to Favourites!');
+    } catch (err) {
+      console.error('Error adding favourite:', err);
+      toast.error('Failed to add favourite');
+    }
+  };
+
+  // Remove item from favourites
+  const handleRemoveFavourite = async (productId) => {
+    if (!user) {
+      toast.error('Please log in to remove favourites');
+      return;
+    }
+    try {
+      await deleteDoc(doc(db, 'favourites', user.uid, 'items', productId));
+      toast.success('Removed from Favourites!');
+    } catch (err) {
+      console.error('Error removing favourite:', err);
+      toast.error('Failed to remove favourite');
+    }
+  };
+
+  // Is item in favourites
+  const isFavourite = (productId) => favourites.includes(productId);
+
+  // --- Cart logic ---
   useEffect(() => {
     if (Array.isArray(cart)) {
       const cartMap = {};
@@ -90,13 +154,10 @@ const ShopPage = () => {
       const productsRef = collection(db, 'bakeryItems');
       let queryConstraints = [];
 
-      // Only order by fields indexed in Firestore
       if (selectedCategory !== 'all') {
         queryConstraints.push(where('category', '==', selectedCategory));
       }
 
-      // For sorting, only add orderBy for fields that are indexed
-      // For 'newest' and 'oldest', use 'createdAt'
       switch (sortBy) {
         case 'priceAsc':
           queryConstraints.push(orderBy('price', 'asc'));
@@ -127,7 +188,6 @@ const ShopPage = () => {
         ...doc.data(),
       }));
 
-      // Filter by price range and availability after fetching
       let filtered = fetchedProducts.filter(product =>
         product.price >= priceRange[0] && product.price <= priceRange[1]
       );
@@ -167,17 +227,14 @@ const ShopPage = () => {
   useEffect(() => {
     if (products.length > 0) {
       let filtered = [...products];
-
       filtered = filtered.filter(product =>
         product.price >= priceRange[0] && product.price <= priceRange[1]
       );
-
       if (availability !== 'all') {
         filtered = filtered.filter(product =>
           availability === 'inStock' ? product.inStock : !product.inStock
         );
       }
-
       setFilteredProducts(filtered);
       setCurrentPage(1);
     }
@@ -225,10 +282,8 @@ const ShopPage = () => {
 
   // Add to cart with up-to-date Firestore check
   const handleAddToCartWithLimit = async (product) => {
-    // Always fetch the cart quantities and current product quantity before adding
     const currentQtyInCart = cartQuantities[product.id] || 0;
     try {
-      // Get live quantity from Firestore for this product
       const productRef = doc(db, 'bakeryItems', product.id);
       const snap = await getDoc(productRef);
       let liveQuantity = product.quantity;
@@ -236,7 +291,6 @@ const ShopPage = () => {
         const data = snap.data();
         liveQuantity = data.quantity;
       }
-      // If out of stock or cart already has all available, block
       if (!liveQuantity || liveQuantity === 0) {
         toast.error('Item is out of stock');
         return;
@@ -245,7 +299,6 @@ const ShopPage = () => {
         toast.error(`Only ${liveQuantity} available. You can't add more.`);
         return;
       }
-      // If passes above, add to cart
       await handleAddToCart(product);
       toast.success('Added to cart!');
     } catch (err) {
@@ -256,6 +309,7 @@ const ShopPage = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      <Toaster position="top-right" />
       {/* Sticky Header */}
       <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm shadow-sm">
         <div className="max-w-7xl mx-auto">
@@ -515,8 +569,34 @@ const ShopPage = () => {
                         y: -5,
                         transition: { duration: 0.2 }
                       }}
-                      className="bg-white rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden"
+                      className="bg-white rounded-lg shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden relative"
                     >
+                      {/* Heart/Favourite Icon (top-right, both desktop & mobile) */}
+                      <button
+                        aria-label={isFavourite(product.id) ? 'Remove from Favourites' : 'Add to Favourites'}
+                        onClick={e => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          if (isFavourite(product.id)) {
+                            handleRemoveFavourite(product.id);
+                          } else {
+                            handleAddFavourite(product);
+                          }
+                        }}
+                        className="absolute top-3 right-3 z-20 p-1 rounded-full hover:bg-pink-100 transition"
+                      >
+                        {isFavourite(product.id) ? (
+                          <SolidHeartIcon
+                            className="h-6 w-6 text-pink-500"
+                            aria-hidden="true"
+                          />
+                        ) : (
+                          <HeartIcon
+                            className="h-6 w-6 text-gray-200 hover:text-pink-500 drop-shadow-[0_0_2px_rgba(255,255,255,1.4)] transition"
+                            aria-hidden="true"
+                          />
+                        )}
+                      </button>
                       {/* Product Card Link */}
                       <Link href={`/product/${toSlug(product.name)}`} className="block group cursor-pointer">
                         <div className="relative h-56 overflow-hidden group">

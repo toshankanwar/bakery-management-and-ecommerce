@@ -142,13 +142,13 @@ const Navbar = () => {
             </motion.div>
           </Link>
 
-          <Link href="/wishlist">
+          <Link href="/favourite">
             <motion.div
               whileHover={{ backgroundColor: '#f0fdf4' }}
               className="px-4 py-2.5 text-sm text-gray-700 hover:text-green-600 flex items-center space-x-3"
             >
               <HeartIcon className="h-5 w-5" />
-              <span>Wishlist</span>
+              <span>Favourites</span>
             </motion.div>
           </Link>
 

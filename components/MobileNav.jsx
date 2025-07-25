@@ -148,7 +148,7 @@ const AccountDrawer = ({ isOpen, onClose, user }) => {
   const accountMenuItems = [
     { name: 'Profile', path: '/profile', icon: UserIcon },
     { name: 'My Orders', path: '/orders', icon: ClipboardDocumentListIcon },
-    { name: 'Wishlist', path: '/wishlist', icon: HeartIcon },
+    { name: 'Favourite', path: '/favourite', icon: HeartIcon },
     { name: 'Reset Password', path: '/forget-password', icon: KeyIcon },
   ];
 
