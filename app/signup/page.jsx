@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { createUserWithRole, signInWithGoogle } from '@/firebase/auth';
 
+const MAIL_SERVER_URL = 'https://mail-server-toshan-bakery.onrender.com/send-welcome-email'; 
+
 const SignUpPage = () => {
   const router = useRouter();
   const [formData, setFormData] = useState({
@@ -23,6 +25,20 @@ const SignUpPage = () => {
       ...prev,
       [name]: value
     }));
+  };
+
+  const sendWelcomeEmail = async (to, displayName) => {
+    // Call your custom Node.js mail server endpoint
+    try {
+      await fetch(MAIL_SERVER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to, displayName }),
+      });
+    } catch (e) {
+      // Can add fallback or log, but do not block user on mail send failure
+      console.error('Failed to send welcome email', e);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -53,13 +69,14 @@ const SignUpPage = () => {
       if (error) {
         setError(error);
       } else {
-        // Redirect to home page after successful signup
+        // Send welcome email (do not block redirect on success/fail)
+        sendWelcomeEmail(formData.email, formData.displayName);
         router.push('/');
       }
     } catch (err) {
       console.error('Error during sign up:', {
         error: err.message,
-        timestamp: '2025-06-11 18:39:33',
+        timestamp: new Date().toISOString(),
         user: 'Kala-bot-apk'
       });
       setError('An error occurred during sign up');
@@ -77,12 +94,15 @@ const SignUpPage = () => {
       if (error) {
         setError(error);
       } else {
+        // Google sign-in doesn't always provide displayName immediately, use fallback if needed
+        const displayName = user?.displayName || 'Baker';
+        sendWelcomeEmail(user.email, displayName);
         router.push('/');
       }
     } catch (err) {
       console.error('Error during Google sign in:', {
         error: err.message,
-        timestamp: '2025-06-11 18:39:33',
+        timestamp: new Date().toISOString(),
         user: 'Kala-bot-apk'
       });
       setError('An error occurred during Google sign in');

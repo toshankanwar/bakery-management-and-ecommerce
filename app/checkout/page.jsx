@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -13,9 +13,10 @@ import {
   getDocs, 
   addDoc, 
   doc,
+  setDoc,
+  getDoc,
   deleteDoc, 
-  where,
-  getDoc
+  where
 } from 'firebase/firestore';
 import { toast } from 'react-hot-toast';
 import { 
@@ -23,6 +24,7 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 
+const MAIL_SERVER_URL = 'https://mail-server-toshan-bakery.onrender.com/send-order-confirmation'; 
 const indianStates = [
   'Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal','Andaman and Nicobar Islands','Chandigarh','Dadra and Nagar Haveli and Daman and Diu','Delhi','Jammu and Kashmir','Ladakh','Lakshadweep','Puducherry'
 ].sort();
@@ -43,7 +45,6 @@ const UPIPaymentModal = ({ isOpen, onClose }) => {
         >
           <XMarkIcon className="h-6 w-6" />
         </button>
-
         <div className="text-center">
           <QrCodeIcon className="h-8 w-8 mx-auto text-yellow-600 mb-4" />
           <h3 className="text-lg font-semibold mb-2 text-yellow-700">UPI Not Available</h3>
@@ -83,14 +84,39 @@ const CheckoutPage = () => {
     deliveryType: 'today',
     deliveryDate: '',
   });
+  const [saveAddress, setSaveAddress] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  // Fetch saved address if available
+  useEffect(() => {
+    if (user) {
+      const fetchSavedAddress = async () => {
+        try {
+          const addressRef = doc(db, 'addresses', user.uid);
+          const addressSnap = await getDoc(addressRef);
+          if (addressSnap.exists()) {
+            const addr = addressSnap.data();
+            setFormData(prev => ({
+              ...prev,
+              ...addr,
+              email: user.email // always use current email
+            }));
+            setSaveAddress(true); // User has saved address
+          }
+        } catch (error) {
+          console.error("Failed to fetch saved address", error);
+        }
+      };
+      fetchSavedAddress();
+    }
+  }, [user]);
+
+  // Cart fetch logic
   useEffect(() => {
     if (!user) {
       router.push('/login');
       return;
     }
-
     const fetchCartItems = async () => {
       try {
         const cartRef = collection(db, 'carts', user.uid, 'items');
@@ -100,12 +126,10 @@ const CheckoutPage = () => {
           id: doc.id,
           ...doc.data()
         }));
-
         if (items.length === 0) {
           router.push('/cart');
           return;
         }
-
         setCartItems(items);
       } catch (error) {
         console.error('Error fetching cart:', error);
@@ -114,7 +138,6 @@ const CheckoutPage = () => {
         setLoading(false);
       }
     };
-
     fetchCartItems();
   }, [user, router]);
 
@@ -126,7 +149,6 @@ const CheckoutPage = () => {
     }));
   };
 
-  // For delivery date, auto-set to empty if type is today
   useEffect(() => {
     if (formData.deliveryType === "today") {
       setFormData(prev => ({ ...prev, deliveryDate: '' }));
@@ -142,22 +164,18 @@ const CheckoutPage = () => {
       toast.error('Please fill in all required fields');
       return false;
     }
-
     if (formData.mobile.length !== 10 || !/^\d+$/.test(formData.mobile)) {
       toast.error('Please enter a valid 10-digit mobile number');
       return false;
     }
-
     if (formData.pincode.length !== 6 || !/^\d+$/.test(formData.pincode)) {
       toast.error('Please enter a valid 6-digit PIN code');
       return false;
     }
-
     if (formData.deliveryType === "choose" && !formData.deliveryDate) {
       toast.error('Please choose a delivery date');
       return false;
     }
-
     return true;
   };
 
@@ -183,12 +201,29 @@ const CheckoutPage = () => {
     };
   };
 
+  // Send order confirmation mail
+  const sendOrderConfirmationMail = async (orderData) => {
+    try {
+      await fetch(MAIL_SERVER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: orderData.userEmail,
+          name: formData.name,
+          order: orderData
+        }),
+      });
+    } catch (e) {
+      console.error('Failed to send order confirmation email', e);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
     setSubmitting(true);
     try {
-      // Check bakery item availability first
+      // Check item availability first
       const { ok, unavailable } = await checkBakeryStock();
       if (!ok) {
         unavailable.forEach(({ item, available }) => {
@@ -200,7 +235,22 @@ const CheckoutPage = () => {
         return;
       }
 
-      // Prepare orderData with only valid fields for Firestore rules
+      // Save address if the user opted for it
+      if (saveAddress) {
+        const addressRef = doc(db, 'addresses', user.uid);
+        await setDoc(addressRef, {
+          name: formData.name,
+          mobile: formData.mobile,
+          state: formData.state,
+          city: formData.city,
+          address: formData.address,
+          apartment: formData.apartment,
+          pincode: formData.pincode,
+        });
+      }
+
+      // Prepare orderData
+      const now = new Date();
       const orderData = {
         userId: user.uid,
         userEmail: user.email,
@@ -221,17 +271,16 @@ const CheckoutPage = () => {
         subtotal,
         shipping,
         total,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        deliveryType: formData.deliveryType
+        createdAt: now.toISOString(),
+        updatedAt: now.toISOString(),
+        deliveryType: formData.deliveryType,
+        deliveryDate: formData.deliveryType === "choose" ? formData.deliveryDate : now.toISOString().slice(0, 10)
       };
 
-      // Only include deliveryDate if deliveryType is 'choose'
-      if (formData.deliveryType === "choose") {
-        orderData.deliveryDate = formData.deliveryDate;
-      }
-
       await addDoc(collection(db, 'orders'), orderData);
+
+      // Send email confirmation (async, don't block UI)
+      sendOrderConfirmationMail(orderData);
 
       if (formData.paymentMethod === 'UPI') {
         setShowUPIModal(true);
@@ -261,14 +310,12 @@ const CheckoutPage = () => {
     );
   }
 
-  // Date for delivery min (today)
   const minDate = new Date().toISOString().slice(0,10);
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-3xl mx-auto px-4">
         <h1 className="text-2xl font-bold text-gray-900 mb-8">Checkout</h1>
-
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Delivery Address */}
           <div className="bg-white rounded-lg shadow-sm p-6">
@@ -277,6 +324,7 @@ const CheckoutPage = () => {
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* ...other inputs... */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Full Name *
@@ -291,7 +339,6 @@ const CheckoutPage = () => {
                   required
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Mobile Number *
@@ -307,7 +354,6 @@ const CheckoutPage = () => {
                   required
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Email
@@ -321,7 +367,6 @@ const CheckoutPage = () => {
                   readOnly
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   State *
@@ -339,7 +384,6 @@ const CheckoutPage = () => {
                   ))}
                 </select>
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   City *
@@ -354,7 +398,6 @@ const CheckoutPage = () => {
                   required
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   PIN Code *
@@ -370,7 +413,6 @@ const CheckoutPage = () => {
                   required
                 />
               </div>
-
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Street Address *
@@ -385,7 +427,6 @@ const CheckoutPage = () => {
                   required
                 />
               </div>
-
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Apartment, Suite, etc. (optional)
@@ -400,8 +441,20 @@ const CheckoutPage = () => {
                 />
               </div>
             </div>
+            {/* Save address checkbox */}
+            <div className="flex items-center mt-4">
+              <input
+                type="checkbox"
+                id="saveAddress"
+                checked={saveAddress}
+                onChange={() => setSaveAddress(val => !val)}
+                className="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+              />
+              <label htmlFor="saveAddress" className="ml-2 block text-sm text-gray-700">
+                Save this address for future orders
+              </label>
+            </div>
           </div>
-
           {/* Delivery Time */}
           <div className="bg-white rounded-lg shadow-sm p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
@@ -447,7 +500,6 @@ const CheckoutPage = () => {
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
               Payment Method
             </h2>
-            
             <div className="space-y-4">
               <label className="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
                 <input
@@ -467,7 +519,6 @@ const CheckoutPage = () => {
                   </span>
                 </div>
               </label>
-
               <label className="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
                 <input
                   type="radio"
@@ -494,7 +545,6 @@ const CheckoutPage = () => {
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
               Order Summary
             </h2>
-            
             <div className="space-y-4">
               {cartItems.map((item) => (
                 <div key={item.id} className="flex items-center py-4 border-b last:border-0">
@@ -522,7 +572,6 @@ const CheckoutPage = () => {
                   </div>
                 </div>
               ))}
-
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Subtotal</span>
@@ -570,7 +619,6 @@ const CheckoutPage = () => {
           </motion.button>
         </form>
       </div>
-
       <UPIPaymentModal
         isOpen={showUPIModal}
         onClose={() => setShowUPIModal(false)}
