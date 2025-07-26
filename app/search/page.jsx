@@ -18,8 +18,8 @@ const toSlug = (str) =>
 const SUGGESTIONS = [
   "Sourdough Bread",
   "Chocolate Cake",
-  "Croissant",
-  "Garlic Bread",
+  "strawberry cream pastry",
+  "blueberry cheesecake slice",
   "Red Velvet Cake",
   "Blueberry Muffin",
   "Almond Biscotti",
@@ -185,7 +185,7 @@ export default function SearchPage() {
               </div>
               <div className="text-gray-400 mb-1 text-base flex flex-wrap gap-2 justify-center">
                 <span>Try:</span>
-                {SUGGESTIONS.slice(0, 4).map(s => (
+                {SUGGESTIONS.slice(0, 5).map(s => (
                   <button
                     key={s}
                     onClick={() => handleSuggestionClick(s)}

@@ -34,36 +34,42 @@ const indianStates = [
   'Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal','Andaman and Nicobar Islands','Chandigarh','Dadra and Nagar Haveli and Daman and Diu','Delhi','Jammu and Kashmir','Ladakh','Lakshadweep','Puducherry'
 ].sort();
 
-// UPI Payment Modal with white blur background
+// UPI Payment Modal with glass blur background
 const UPIPaymentModal = ({ isOpen, onClose, onPay }) => {
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(10px)' }}>
+      style={{ background: 'rgba(30,41,59,0.2)', backdropFilter: 'blur(12px)' }}>
       <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        className="bg-white rounded-lg p-6 max-w-sm w-full relative shadow-xl"
+        initial={{ y: 80, opacity: 0, scale: 0.96 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        exit={{ y: 80, opacity: 0, scale: 0.96 }}
+        className="bg-white bg-opacity-90 rounded-xl p-7 max-w-xs w-full shadow-2xl border border-green-100 relative"
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+          className="absolute top-3 right-3 text-gray-400 hover:text-green-500 focus:outline-none"
         >
           <XMarkIcon className="h-6 w-6" />
         </button>
-        <div className="text-center">
-          <QrCodeIcon className="h-8 w-8 mx-auto text-yellow-600 mb-4" />
-          <h3 className="text-lg font-semibold mb-2 text-yellow-700">Pay Securely via UPI</h3>
-          <p className="text-sm text-yellow-700 mb-4">
-            We support instant and secure UPI payments.<br />
+        <div className="flex flex-col items-center">
+          <motion.div
+            initial={{ rotate: 0 }}
+            animate={{ rotate: [0, 10, -10, 0] }}
+            transition={{ repeat: Infinity, duration: 2 }}
+          >
+            <QrCodeIcon className="h-10 w-10 text-green-700 mb-3 drop-shadow" />
+          </motion.div>
+          <h3 className="text-lg font-bold mb-2 text-green-700">Secure UPI Payment</h3>
+          <p className="text-[15px] text-gray-700 mb-5 text-center">
+            We support instant and secure UPI payments. <br />
             Please complete your payment to confirm your order. If you cancel, your order will not be placed.
           </p>
           <motion.button
             onClick={onPay}
-            className="mt-2 bg-green-600 text-white px-5 py-2 rounded-lg font-medium hover:bg-green-700 shadow"
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.96 }}
+            className="mt-2 bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-2 rounded-lg font-semibold shadow-lg hover:from-green-600 hover:to-green-700 focus:ring-4 focus:ring-green-300 transition"
+            whileHover={{ scale: 1.06 }}
+            whileTap={{ scale: 0.97 }}
           >
             Pay Now
           </motion.button>
@@ -73,31 +79,81 @@ const UPIPaymentModal = ({ isOpen, onClose, onPay }) => {
   );
 };
 
+// Animated Order Confirmation
 const OrderConfirmedEffect = ({ show }) => (
   <AnimatePresence>
     {show && (
       <motion.div
-        initial={{ opacity: 0, scale: 0.92 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.92 }}
-        transition={{ duration: 0.6 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
         className="fixed inset-0 z-[100] flex items-center justify-center"
-        style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(6px)' }}
+        style={{ background: 'rgba(10, 180, 120, 0.10)', backdropFilter: 'blur(10px)' }}
       >
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 24 }}
-          className="bg-white rounded-2xl shadow-2xl p-8 flex flex-col items-center"
+          initial={{ scale: 0.85, y: 80, opacity: 0 }}
+          animate={{ scale: 1, y: 0, opacity: 1 }}
+          exit={{ scale: 0.9, y: 80, opacity: 0 }}
+          transition={{ type: "spring", stiffness: 140, damping: 15 }}
+          className="bg-white rounded-2xl shadow-2xl px-10 py-8 flex flex-col items-center border border-green-200 relative"
         >
-          <CheckCircleIcon className="h-14 w-14 text-green-600 mb-4 animate-pulse" />
-          <h2 className="text-2xl font-bold text-green-700 mb-2">Order Confirmed!</h2>
-          <p className="text-gray-700">Your order was successfully placed and is being processed.</p>
+          <motion.div
+            initial={{ scale: 0, rotate: 0 }}
+            animate={{ scale: [1.3, 0.8, 1.08, 1], rotate: [0, 30, -22, 0] }}
+            transition={{ duration: 0.9, ease: "easeInOut", type: "tween" }} // Fixed: use tween!
+            className="shadow-md rounded-full mb-4"
+          >
+            <CheckCircleIcon className="h-20 w-20 text-green-500 animate-bounce-slow" />
+          </motion.div>
+          <motion.h2
+            initial={{ scale: 0.85, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.18, duration: 0.6, type: "spring" }}
+            className="text-3xl font-bold text-green-700 mb-3"
+          >
+            Order Confirmed!
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.7 }}
+            className="text-gray-700 text-lg"
+          >
+            Your order was successfully placed and is being processed.
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, y: [-10, 12, -4, 0] }}
+            transition={{ delay: 0.45, duration: 0.85 }}
+            className="absolute -top-8 left-1/2 -translate-x-1/2 pointer-events-none"
+          >
+            <svg width="140" height="30" viewBox="0 0 140 30" fill="none">
+              <motion.ellipse
+                initial={{ scaleX: 0.8, scaleY: 0.2, opacity: 0.7 }}
+                animate={{
+                  scaleX: [0.8, 1.2, 1, 0.85],
+                  scaleY: [0.2, 0.35, 0.28, 0.22],
+                  opacity: [0.7, 1, 0.9, 0.7],
+                }}
+                transition={{ repeat: Infinity, duration: 1.6, ease: "easeInOut", type: "tween" }}
+                cx="70" cy="15" rx="56" ry="7" fill="#bbf7d0"
+              />
+            </svg>
+          </motion.div>
         </motion.div>
       </motion.div>
     )}
   </AnimatePresence>
 );
+
+
+// Helper function for border color
+const getInputBorder = (value, isFocused, required = true) => {
+  if (!required) return isFocused ? 'border-green-500' : 'border-gray-300';
+  if (isFocused) return 'border-green-600 shadow-md';
+  if (value === '' || value === undefined) return 'border-red-500 shadow';
+  return 'border-gray-300';
+};
 
 const CheckoutPage = () => {
   const { user } = useAuthContext();
@@ -119,9 +175,13 @@ const CheckoutPage = () => {
     deliveryType: 'choose',
     deliveryDate: '',
   });
+  const [focus, setFocus] = useState({});
   const [saveAddress, setSaveAddress] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showOrderConfirmed, setShowOrderConfirmed] = useState(false);
+
+  // Default delivery date: today
+  const todayDate = new Date().toISOString().slice(0, 10);
 
   // Fetch saved address if available
   useEffect(() => {
@@ -196,14 +256,14 @@ const CheckoutPage = () => {
   };
 
   useEffect(() => {
+    // Set today's date as default
     if (formData.deliveryType === "choose" && !formData.deliveryDate) {
-      // Set deliveryDate to tomorrow by default
-      const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-      setFormData(prev => ({ ...prev, deliveryDate: tomorrow }));
+      setFormData(prev => ({ ...prev, deliveryDate: todayDate }));
     }
     if (formData.deliveryType === "today") {
-      setFormData(prev => ({ ...prev, deliveryDate: '' }));
+      setFormData(prev => ({ ...prev, deliveryDate: todayDate }));
     }
+  // eslint-disable-next-line
   }, [formData.deliveryType]);
 
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -305,7 +365,7 @@ const CheckoutPage = () => {
           setTimeout(() => {
             setShowOrderConfirmed(false);
             router.push("/orders");
-          }, 1700); // Show effect for 1.7s before redirect
+          }, 1800); // Show effect for 1.8s before redirect
           toast.success("Payment confirmed & order placed!");
         } else {
           await updateDoc(doc(db, "orders", orderData.orderDocId), {
@@ -330,7 +390,7 @@ const CheckoutPage = () => {
         email: orderData.address.email,
         contact: orderData.address.mobile,
       },
-      theme: { color: "#38a169" },
+      theme: { color: "#22c55e" },
     };
 
     const rzp = new window.Razorpay(options);
@@ -393,7 +453,7 @@ const CheckoutPage = () => {
         createdAt: now.toISOString(),
         updatedAt: now.toISOString(),
         deliveryType: formData.deliveryType,
-        deliveryDate: formData.deliveryType === "choose" ? formData.deliveryDate : ''
+        deliveryDate: formData.deliveryDate || todayDate
       };
 
       // Create order in Firestore (pending status)
@@ -422,7 +482,7 @@ const CheckoutPage = () => {
         setTimeout(() => {
           setShowOrderConfirmed(false);
           router.push('/orders');
-        }, 1700);
+        }, 1800);
         toast.success('Order placed successfully!');
       }
     } catch (error) {
@@ -443,162 +503,181 @@ const CheckoutPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-tr from-green-50 to-green-100">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-green-600" />
       </div>
     );
   }
 
-  const minDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const minDate = todayDate;
+
+  // Form field meta for modern UI
+  const fields = [
+    {
+      label: "Full Name *", name: "name", type: "text", placeholder: "Enter your full name", required: true,
+    },
+    {
+      label: "Mobile Number *", name: "mobile", type: "tel", placeholder: "10-digit mobile number", required: true, maxLength: 10,
+    },
+    {
+      label: "Email", name: "email", type: "email", placeholder: "", required: false, readOnly: true,
+    },
+    {
+      label: "State *", name: "state", type: "select", required: true, options: indianStates,
+    },
+    {
+      label: "City *", name: "city", type: "text", placeholder: "Enter your city", required: true,
+    },
+    {
+      label: "PIN Code *", name: "pincode", type: "text", placeholder: "6-digit PIN code", required: true, maxLength: 6,
+    },
+    {
+      label: "Street Address *", name: "address", type: "text", placeholder: "House number and street name", required: true,
+    },
+    {
+      label: "Apartment, Suite, etc. (optional)", name: "apartment", type: "text", placeholder: "Apartment, suite, unit, etc.", required: false,
+    }
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 relative">
+    <div className="min-h-screen bg-gradient-to-tr from-green-50 to-green-100 py-12 relative">
       <OrderConfirmedEffect show={showOrderConfirmed} />
       <div className="max-w-3xl mx-auto px-4">
-        <h1 className="text-2xl font-bold text-gray-900 mb-8">Checkout</h1>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <motion.h1
+          initial={{ x: -40, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.45 }}
+          className="text-3xl font-bold text-green-800 mb-8 text-center"
+        >
+          Checkout
+        </motion.h1>
+        <form onSubmit={handleSubmit} className="space-y-8">
           {/* Delivery Address */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          <motion.div
+            initial={{ y: 40, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+            className="bg-white/95 rounded-2xl shadow-lg p-7"
+          >
+            <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+              <span className="inline-block w-2 h-2 rounded-full bg-green-400"></span>
               Delivery Address
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* ... same as before ... */}
-              {/* all address fields unchanged */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {fields.slice(0, 2).map(f => (
+                <div key={f.name}>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
+                  <input
+                    {...(f.maxLength && { maxLength: f.maxLength })}
+                    type={f.type}
+                    name={f.name}
+                    value={formData[f.name]}
+                    onChange={handleInputChange}
+                    onFocus={() => setFocus(prev => ({ ...prev, [f.name]: true }))}
+                    onBlur={() => setFocus(prev => ({ ...prev, [f.name]: false }))}
+                    className={`w-full px-3 py-2 rounded-lg transition border ${getInputBorder(formData[f.name], focus[f.name], f.required)} focus:outline-none focus:border-green-500 bg-white text-gray-900`}
+                    placeholder={f.placeholder}
+                    required={f.required}
+                  />
+                </div>
+              ))}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{fields[2].label}</label>
                 <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
+                  type={fields[2].type}
+                  name={fields[2].name}
+                  value={formData[fields[2].name]}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900"
-                  placeholder="Enter your full name"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Mobile Number *
-                </label>
-                <input
-                  type="tel"
-                  name="mobile"
-                  value={formData.mobile}
-                  onChange={handleInputChange}
-                  maxLength={10}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900"
-                  placeholder="10-digit mobile number"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-900"
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-100 text-gray-900"
                   readOnly
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  State *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{fields[3].label}</label>
                 <select
-                  name="state"
-                  value={formData.state}
+                  name={fields[3].name}
+                  value={formData[fields[3].name]}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900"
+                  onFocus={() => setFocus(prev => ({ ...prev, [fields[3].name]: true }))}
+                  onBlur={() => setFocus(prev => ({ ...prev, [fields[3].name]: false }))}
+                  className={`w-full px-3 py-2 rounded-lg border ${getInputBorder(formData[fields[3].name], focus[fields[3].name], true)} focus:outline-none focus:border-green-500 text-gray-900`}
                   required
                 >
                   <option value="">Select your state</option>
-                  {indianStates.map(state => (
+                  {fields[3].options.map(state => (
                     <option key={state} value={state}>{state}</option>
                   ))}
                 </select>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  City *
-                </label>
+              {fields.slice(4, 6).map(f => (
+                <div key={f.name}>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
+                  <input
+                    {...(f.maxLength && { maxLength: f.maxLength })}
+                    type={f.type}
+                    name={f.name}
+                    value={formData[f.name]}
+                    onChange={handleInputChange}
+                    onFocus={() => setFocus(prev => ({ ...prev, [f.name]: true }))}
+                    onBlur={() => setFocus(prev => ({ ...prev, [f.name]: false }))}
+                    className={`w-full px-3 py-2 rounded-lg transition border ${getInputBorder(formData[f.name], focus[f.name], f.required)} focus:outline-none focus:border-green-500 text-gray-900`}
+                    placeholder={f.placeholder}
+                    required={f.required}
+                  />
+                </div>
+              ))}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">{fields[6].label}</label>
                 <input
-                  type="text"
-                  name="city"
-                  value={formData.city}
+                  type={fields[6].type}
+                  name={fields[6].name}
+                  value={formData[fields[6].name]}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900"
-                  placeholder="Enter your city"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  PIN Code *
-                </label>
-                <input
-                  type="text"
-                  name="pincode"
-                  value={formData.pincode}
-                  onChange={handleInputChange}
-                  maxLength={6}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900"
-                  placeholder="6-digit PIN code"
-                  required
+                  onFocus={() => setFocus(prev => ({ ...prev, [fields[6].name]: true }))}
+                  onBlur={() => setFocus(prev => ({ ...prev, [fields[6].name]: false }))}
+                  className={`w-full px-3 py-2 rounded-lg border ${getInputBorder(formData[fields[6].name], focus[fields[6].name], fields[6].required)} focus:outline-none focus:border-green-500 text-gray-900`}
+                  placeholder={fields[6].placeholder}
+                  required={fields[6].required}
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Street Address *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{fields[7].label}</label>
                 <input
-                  type="text"
-                  name="address"
-                  value={formData.address}
+                  type={fields[7].type}
+                  name={fields[7].name}
+                  value={formData[fields[7].name]}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900"
-                  placeholder="House number and street name"
-                  required
-                />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Apartment, Suite, etc. (optional)
-                </label>
-                <input
-                  type="text"
-                  name="apartment"
-                  value={formData.apartment}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900"
-                  placeholder="Apartment, suite, unit, etc."
+                  onFocus={() => setFocus(prev => ({ ...prev, [fields[7].name]: true }))}
+                  onBlur={() => setFocus(prev => ({ ...prev, [fields[7].name]: false }))}
+                  className={`w-full px-3 py-2 rounded-lg border ${getInputBorder(formData[fields[7].name], focus[fields[7].name], fields[7].required)} focus:outline-none focus:border-green-500 text-gray-900`}
+                  placeholder={fields[7].placeholder}
                 />
               </div>
             </div>
             {/* Save address checkbox */}
-            <div className="flex items-center mt-4">
+            <div className="flex items-center mt-6">
               <input
                 type="checkbox"
                 id="saveAddress"
                 checked={saveAddress}
                 onChange={() => setSaveAddress(val => !val)}
-                className="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                className="h-4 w-4 text-green-600 border-gray-300 rounded"
               />
               <label htmlFor="saveAddress" className="ml-2 block text-sm text-gray-700">
                 Save this address for future orders
               </label>
             </div>
-          </div>
+          </motion.div>
           {/* Delivery Time */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Delivery Time
+          <motion.div
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.33, delay: 0.08 }}
+            className="bg-white/95 rounded-2xl shadow-lg p-7"
+          >
+            <h2 className="text-xl font-semibold text-gray-900 mb-5 flex items-center gap-2">
+              <span className="inline-block w-2 h-2 rounded-full bg-green-400"></span>
+              Delivery Date
             </h2>
             <div className="flex flex-col sm:flex-row items-center gap-4">
               <label className="flex items-center cursor-pointer">
@@ -615,22 +694,30 @@ const CheckoutPage = () => {
                   type="date"
                   min={minDate}
                   name="deliveryDate"
-                  value={formData.deliveryDate}
+                  value={formData.deliveryDate || todayDate}
                   onChange={handleInputChange}
-                  className="ml-2 px-2 py-1 border border-gray-300 rounded-md text-gray-900"
+                  className={`ml-2 px-3 py-1 border rounded-md transition ${getInputBorder(formData.deliveryDate, focus.deliveryDate, true)} focus:outline-none focus:border-green-500 text-gray-900`}
                   required
+                  onFocus={() => setFocus(prev => ({ ...prev, deliveryDate: true }))}
+                  onBlur={() => setFocus(prev => ({ ...prev, deliveryDate: false }))}
                 />
               </label>
             </div>
-          </div>
+          </motion.div>
 
           {/* Payment Method */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          <motion.div
+            initial={{ y: 60, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.36, delay: 0.14 }}
+            className="bg-white/95 rounded-2xl shadow-lg p-7"
+          >
+            <h2 className="text-xl font-semibold text-gray-900 mb-5 flex items-center gap-2">
+              <span className="inline-block w-2 h-2 rounded-full bg-green-400"></span>
               Payment Method
             </h2>
             <div className="space-y-4">
-              <label className="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+              <label className="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-green-50 transition border-green-200">
                 <input
                   type="radio"
                   name="paymentMethod"
@@ -641,16 +728,16 @@ const CheckoutPage = () => {
                 />
                 <div className="ml-3">
                   <span className="block text-sm font-medium text-gray-900">
-                    UPI Payment (Recommended)
+                    UPI Payment <span className="bg-green-100 text-green-600 px-2 py-0.5 rounded-lg ml-1 text-xs font-semibold">Recommended</span>
                   </span>
                   <span className="block text-sm text-gray-500">
                     <span className="font-semibold text-green-700">
-                      We recommend UPI payments for fast, secure, and instant order confirmation.
+                      Fast, secure, and instant order confirmation.
                     </span>
                   </span>
                 </div>
               </label>
-              <label className="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+              <label className="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-green-50 transition border-green-200">
                 <input
                   type="radio"
                   name="paymentMethod"
@@ -669,17 +756,23 @@ const CheckoutPage = () => {
                 </div>
               </label>
             </div>
-          </div>
+          </motion.div>
 
           {/* Order Summary */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          <motion.div
+            initial={{ y: 80, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.38, delay: 0.18 }}
+            className="bg-white/95 rounded-2xl shadow-lg p-7"
+          >
+            <h2 className="text-xl font-semibold text-gray-900 mb-5 flex items-center gap-2">
+              <span className="inline-block w-2 h-2 rounded-full bg-green-400"></span>
               Order Summary
             </h2>
-            <div className="space-y-4">
+            <div className="space-y-4 mb-2">
               {cartItems.map((item) => (
-                <div key={item.id} className="flex items-center py-4 border-b last:border-0">
-                  <div className="relative h-16 w-16 rounded-md overflow-hidden">
+                <div key={item.id} className="flex items-center py-4 border-b last:border-0 border-gray-100">
+                  <div className="relative h-16 w-16 rounded-lg overflow-hidden shadow">
                     <Image
                       src={item.image || '/default-product.png'}
                       alt={item.name}
@@ -688,9 +781,9 @@ const CheckoutPage = () => {
                     />
                   </div>
                   <div className="flex-1 ml-4">
-                    <h3 className="text-sm font-medium text-gray-900">{item.name}</h3>
-                    <p className="mt-1 text-sm text-gray-500">
-                      Quantity: {item.quantity}
+                    <h3 className="text-base font-medium text-gray-900">{item.name}</h3>
+                    <p className="mt-1 text-[15px] text-gray-500">
+                      Quantity: <span className="font-semibold">{item.quantity}</span>
                     </p>
                     {item.specialRequest && (
                       <p className="mt-1 text-sm text-gray-500">
@@ -698,19 +791,19 @@ const CheckoutPage = () => {
                       </p>
                     )}
                   </div>
-                  <div className="text-sm font-medium text-gray-900">
+                  <div className="text-base font-medium text-green-700">
                     ₹{(item.price * item.quantity).toFixed(2)}
                   </div>
                 </div>
               ))}
-              <div className="space-y-2">
+              <div className="space-y-2 mt-4">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span className="font-medium text-gray-900">₹{subtotal.toFixed(2)}</span>
+                  <span className="text-gray-700">Subtotal</span>
+                  <span className="font-semibold text-gray-900">₹{subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Shipping</span>
-                  <span className="font-medium text-gray-900">
+                  <span className="text-gray-700">Shipping</span>
+                  <span className="font-semibold text-gray-900">
                     {shipping === 0 ? (
                       <span className="text-green-600">Free</span>
                     ) : (
@@ -720,28 +813,28 @@ const CheckoutPage = () => {
                 </div>
                 <div className="border-t pt-2 mt-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-base font-semibold text-gray-900">
+                    <span className="text-lg font-semibold text-gray-900">
                       Total
                     </span>
-                    <span className="text-xl font-bold text-green-600">
+                    <span className="text-2xl font-bold text-green-600">
                       ₹{total.toFixed(2)}
                     </span>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           <motion.button
             type="submit"
             whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileTap={{ scale: 0.97 }}
             disabled={submitting}
-            className="w-full py-4 px-6 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-4 px-6 bg-gradient-to-r from-green-500 to-green-600 text-white font-bold text-lg rounded-xl shadow-lg hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {submitting ? (
               <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2" />
+                <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-3" />
                 Processing...
               </div>
             ) : (
@@ -755,6 +848,16 @@ const CheckoutPage = () => {
         onClose={() => setShowUPIModal(false)}
         onPay={handleUPIModalPay}
       />
+      <style jsx global>{`
+        .animate-bounce-slow {
+          animation: bounce-slow 1.5s infinite;
+        }
+        @keyframes bounce-slow {
+          0%, 100% { transform: translateY(0);}
+          30% { transform: translateY(-18px);}
+          60% { transform: translateY(7px);}
+        }
+      `}</style>
     </div>
   );
 };

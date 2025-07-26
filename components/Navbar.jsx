@@ -259,7 +259,7 @@ const Navbar = () => {
             </div>
 
             {/* Right side */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-5">
             <Link href="/search" className="hidden md:block">
               <motion.button
                 whileHover={{ scale: 1.1 }}
