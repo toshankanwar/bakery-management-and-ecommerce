@@ -45,6 +45,25 @@ const socialLinks = [
   },
 ];
 
+const legalLinks = [
+  {
+    name: 'Privacy Policy',
+    href: '/privacy-policy',
+  },
+  {
+    name: 'Terms & Conditions',
+    href: '/terms-and-conditions',
+  },
+  {
+    name: 'Cancellation & Refund',
+    href: '/cancellation-and-refund',
+  },
+  {
+    name: 'Shipping & Delivery',
+    href: '/shipping-and-delivery',
+  },
+];
+
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 
@@ -119,6 +138,31 @@ const Footer = () => {
             </motion.div>
           </motion.div>
 
+          {/* Legal Links */}
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={containerVariants}
+            className="space-y-4"
+          >
+            <motion.h3 variants={itemVariants} className="text-lg font-semibold text-gray-800">
+              Legal & Policies
+            </motion.h3>
+            <motion.div variants={containerVariants} className="space-y-2">
+              {legalLinks.map((item) => (
+                <motion.div key={item.name} variants={itemVariants}>
+                  <Link 
+                    href={item.href}
+                    className="text-gray-600 hover:text-green-600 transition-colors block text-sm"
+                  >
+                    {item.name}
+                  </Link>
+                </motion.div>
+              ))}
+            </motion.div>
+          </motion.div>
+
           {/* Contact Information */}
           <motion.div
             initial="hidden"
@@ -145,39 +189,9 @@ const Footer = () => {
               </motion.div>
             </motion.div>
           </motion.div>
-
-          {/* Newsletter Signup */}
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={containerVariants}
-            className="space-y-4"
-          >
-            <motion.h3 variants={itemVariants} className="text-lg font-semibold text-gray-800">
-              Stay Updated
-            </motion.h3>
-            <motion.p variants={itemVariants} className="text-sm text-gray-600">
-              Subscribe to our newsletter for special offers and updates.
-            </motion.p>
-            <motion.form variants={itemVariants} className="space-y-2">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="w-full px-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent text-gray-900"
-              />
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="w-full px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-              >
-                Subscribe
-              </motion.button>
-            </motion.form>
-          </motion.div>
         </div>
 
-        {/* Social Media Links */}
+        {/* Newsletter Signup */}
         <motion.div
           initial="hidden"
           whileInView="visible"
@@ -185,7 +199,8 @@ const Footer = () => {
           variants={containerVariants}
           className="mt-8 pt-8 border-t border-gray-200"
         >
-          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 items-center">
+            {/* Social Media Links */}
             <motion.div variants={itemVariants} className="flex space-x-6">
               {socialLinks.map(({ name, url, icon }) => (
                 <motion.a
@@ -202,52 +217,67 @@ const Footer = () => {
                 </motion.a>
               ))}
             </motion.div>
-            <motion.p variants={itemVariants} className="text-sm text-gray-600 flex flex-col sm:flex-row items-center justify-center gap-1 text-center">
-              <span className="flex flex-wrap items-center justify-center gap-1">
-                Designed & Developed with{" "}
-                <svg 
-                  className="w-4 h-4 mx-1 text-red-500 animate-pulse" 
-                  fill="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                </svg>
-                by{" "}
-                <a 
-                  href="https://toshankanwar.website" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="font-medium text-green-600 hover:text-green-700 transition-colors hover:underline"
-                >
-                  Toshan Kanwar
-                </a>
-              </span>
-              <span className="text-xs text-gray-500 mt-1 sm:mt-0">
-                <span className="hidden sm:inline mx-1">•</span>
-                Built with{" "}
-                <a 
-                  href="https://nextjs.org" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-gray-600 hover:text-gray-800 transition-colors"
-                >
-                  Next.js
-                </a>
-                {" 13 "}+{" and "}
-                <a 
-                  href="https://firebase.google.com" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-gray-600 hover:text-gray-800 transition-colors"
-                >
-                  Firebase
-                </a>
-                {" "}• Mobile First • Responsive
-              </span>
-              <span className="hidden sm:inline mx-1">•</span>
-              <span>© {currentYear} Toshan Bakery. All rights reserved.</span>
-            </motion.p>
+            {/* Newsletter Signup Form */}
+            <motion.form variants={itemVariants} className="space-y-2 max-w-xs ml-auto">
+              <input
+                type="email"
+                placeholder="Enter your email"
+                className="w-full px-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent text-gray-900"
+              />
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-full px-4 py-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+              >
+                Subscribe
+              </motion.button>
+            </motion.form>
           </div>
+          <motion.p variants={itemVariants} className="text-sm text-gray-600 flex flex-col sm:flex-row items-center justify-center gap-1 text-center mt-8">
+            <span className="flex flex-wrap items-center justify-center gap-1">
+              Designed & Developed with{" "}
+              <svg 
+                className="w-4 h-4 mx-1 text-red-500 animate-pulse" 
+                fill="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
+              by{" "}
+              <a 
+                href="https://toshankanwar.website" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="font-medium text-green-600 hover:text-green-700 transition-colors hover:underline"
+              >
+                Toshan Kanwar
+              </a>
+            </span>
+            <span className="text-xs text-gray-500 mt-1 sm:mt-0">
+              <span className="hidden sm:inline mx-1">•</span>
+              Built with{" "}
+              <a 
+                href="https://nextjs.org" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                Next.js
+              </a>
+              {" 13 "}+{" and "}
+              <a 
+                href="https://firebase.google.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                Firebase
+              </a>
+              {" "}• Mobile First • Responsive
+            </span>
+            <span className="hidden sm:inline mx-1">•</span>
+            <span>© {currentYear} Toshan Bakery. All rights reserved.</span>
+          </motion.p>
         </motion.div>
       </div>
     </footer>
