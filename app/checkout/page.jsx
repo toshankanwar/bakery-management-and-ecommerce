@@ -372,7 +372,7 @@ const CheckoutPage = () => {
             paymentStatus: "cancelled",
             orderStatus: "cancelled",
           });
-          toast.error("Payment verification failed. Order cancelled.");
+          toast.error("Payment verification failed. Order not confirmed.");
         }
       },
       modal: {
@@ -382,7 +382,7 @@ const CheckoutPage = () => {
             paymentStatus: "cancelled",
             orderStatus: "cancelled",
           });
-          toast.error("Payment cancelled. Order not placed.");
+          toast.error("Payment cancelled by user. Order not placed.");
         },
       },
       prefill: {
