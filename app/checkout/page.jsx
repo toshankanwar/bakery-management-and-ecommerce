@@ -359,7 +359,14 @@ const CheckoutPage = () => {
             deleteDoc(doc(db, 'carts', user.uid, 'items', item.id))
           );
           await Promise.all(deletePromises);
-
+          console.log('Calling decrement-stock API with:', {
+            orderDocId: orderData.orderDocId,
+            paymentStatus: orderData.paymentStatus,
+            orderItems: orderData.items,
+          });
+          
+          // CALL stock decrement API here
+          
           sendOrderConfirmationMail(orderData);
           setShowOrderConfirmed(true);
           setTimeout(() => {
@@ -369,10 +376,10 @@ const CheckoutPage = () => {
           toast.success("Payment confirmed & order placed!");
         } else {
           await updateDoc(doc(db, "orders", orderData.orderDocId), {
-            paymentStatus: "cancelled",
-            orderStatus: "cancelled",
+            paymentStatus: "confirmed",
+            orderStatus: "pending",
           });
-          toast.error("Payment verification failed. Order cancelled.");
+          toast.error("Issue with Item Quantity. Order cancelled.");
         }
       },
       modal: {
@@ -465,17 +472,26 @@ const CheckoutPage = () => {
         setPendingOrderData(orderData);
         setShowUPIModal(true);
       } else {
-        // COD flow: payment is pending, order is confirmed
-        await updateDoc(orderRef, {
-          paymentStatus: 'pending',
-          orderStatus: 'confirmed'
-        });
-
         // Remove cart items
         const deletePromises = cartItems.map(item => 
           deleteDoc(doc(db, 'carts', user.uid, 'items', item.id))
         );
         await Promise.all(deletePromises);
+        console.log('Calling decrement-stock API with:', {
+          orderDocId: orderData.orderDocId,
+          paymentStatus: orderData.paymentStatus,
+          orderItems: orderData.items,
+        });
+        // CALL stock decrement API here
+        await fetch('/api/orders/decrement-stock', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderDocId: orderData.orderDocId,   // Must be present here
+            paymentStatus: orderData.paymentStatus, // e.g. 'confirmed'
+            orderItems: orderData.items,         // Array of order items
+          }),
+        });
 
         sendOrderConfirmationMail(orderData);
         setShowOrderConfirmed(true);

@@ -16,6 +16,7 @@
     "@mui/material": "^7.1.1",
     "@reduxjs/toolkit": "^2.8.2",
     "firebase": "^11.9.0",
+    "firebase-admin": "^13.4.0",
     "formik": "^2.4.6",
     "framer-motion": "^12.18.1",
     "html2pdf.js": "^0.10.3",
