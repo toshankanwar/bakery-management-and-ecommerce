@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { db } from '@/firebase/config';
+import { db } from "@/firebase/config";
 import { 
   collection, 
   query, 
@@ -16,6 +16,7 @@ import {
   setDoc,
   getDoc,
   deleteDoc, 
+  updateDoc,
   where
 } from 'firebase/firestore';
 import { toast } from 'react-hot-toast';
@@ -24,12 +25,15 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 
+// HARDCODED Razorpay credentials for demo ONLY. Replace with your own.
+const RAZORPAY_KEY_ID = "YOUR_RAZORPAY_KEY_ID"; // <-- Insert your Razorpay Key ID here
+
 const MAIL_SERVER_URL = 'https://mail-server-toshan-bakery.onrender.com/send-order-confirmation'; 
 const indianStates = [
   'Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal','Andaman and Nicobar Islands','Chandigarh','Dadra and Nagar Haveli and Daman and Diu','Delhi','Jammu and Kashmir','Ladakh','Lakshadweep','Puducherry'
 ].sort();
 
-const UPIPaymentModal = ({ isOpen, onClose }) => {
+const UPIPaymentModal = ({ isOpen, onClose, onPay }) => {
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -47,17 +51,15 @@ const UPIPaymentModal = ({ isOpen, onClose }) => {
         </button>
         <div className="text-center">
           <QrCodeIcon className="h-8 w-8 mx-auto text-yellow-600 mb-4" />
-          <h3 className="text-lg font-semibold mb-2 text-yellow-700">UPI Not Available</h3>
+          <h3 className="text-lg font-semibold mb-2 text-yellow-700">Proceed to UPI Payment</h3>
           <p className="text-sm text-yellow-700 mb-4">
-            UPI payment is currently <span className="font-semibold">not enabled</span>.<br />
-            Please use <span className="font-semibold">Cash on Delivery</span> to prevent any loss. <br />
-            We are working on enabling UPI soon. Thank you for your patience!
+            Please proceed to pay using UPI. If you cancel, your order will not be placed.
           </p>
           <motion.button
-            onClick={onClose}
+            onClick={onPay}
             className="mt-2 bg-green-600 text-white px-5 py-2 rounded-lg font-medium hover:bg-green-700"
           >
-            Close
+            Pay Now
           </motion.button>
         </div>
       </motion.div>
@@ -71,6 +73,7 @@ const CheckoutPage = () => {
   const [loading, setLoading] = useState(true);
   const [cartItems, setCartItems] = useState([]);
   const [showUPIModal, setShowUPIModal] = useState(false);
+  const [pendingOrderData, setPendingOrderData] = useState(null); // for UPI flow
   const [formData, setFormData] = useState({
     name: '',
     mobile: '',
@@ -140,6 +143,16 @@ const CheckoutPage = () => {
     };
     fetchCartItems();
   }, [user, router]);
+
+  // Dynamically load Razorpay script
+  useEffect(() => {
+    if (!window.Razorpay) {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.async = true;
+      document.body.appendChild(script);
+    }
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -218,6 +231,70 @@ const CheckoutPage = () => {
     }
   };
 
+  // Razorpay payment handler (UPI only)
+  const handleRazorpayPayment = async (orderData) => {
+    // Create payment order using API route (hardcoded keys server-side)
+    const paymentOrder = await fetch('/api/payment/order', {
+      method: 'POST',
+      body: JSON.stringify({ amount: orderData.total * 100 }),
+      headers: { 'Content-Type': 'application/json' }
+    }).then(res => res.json());
+
+    const options = {
+      key: RAZORPAY_KEY_ID,
+      amount: paymentOrder.amount,
+      currency: "INR",
+      name: "Bakery Name",
+      description: "Your bakery order",
+      order_id: paymentOrder.id,
+      handler: async function (response) {
+        // Payment success, verify on backend
+        const verify = await fetch('/api/payment/verify', {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...response, orderDocId: orderData.orderDocId }),
+        }).then((res) => res.json());
+
+        if (verify.status === "success") {
+          // Remove cart items after payment success
+          const deletePromises = cartItems.map(item => 
+            deleteDoc(doc(db, 'carts', user.uid, 'items', item.id))
+          );
+          await Promise.all(deletePromises);
+
+          sendOrderConfirmationMail(orderData);
+          toast.success("Payment confirmed & order placed!");
+          router.push("/orders");
+        } else {
+          await updateDoc(doc(db, "orders", orderData.orderDocId), {
+            paymentStatus: "cancelled",
+            orderStatus: "cancelled",
+          });
+          toast.error("Payment verification failed. Order cancelled.");
+        }
+      },
+      modal: {
+        ondismiss: async function () {
+          // User cancelled payment, cancel order in Firestore
+          await updateDoc(doc(db, "orders", orderData.orderDocId), {
+            paymentStatus: "cancelled",
+            orderStatus: "cancelled",
+          });
+          toast.error("Payment cancelled. Order not placed.");
+        },
+      },
+      prefill: {
+        name: orderData.address.name,
+        email: orderData.address.email,
+        contact: orderData.address.mobile,
+      },
+      theme: { color: "#38a169" },
+    };
+
+    const rzp = new window.Razorpay(options);
+    rzp.open();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -267,7 +344,7 @@ const CheckoutPage = () => {
         },
         paymentMethod: formData.paymentMethod,
         paymentStatus: 'pending',
-        orderStatus: formData.paymentMethod === 'COD' ? 'confirmed' : 'pending',
+        orderStatus: 'pending',
         subtotal,
         shipping,
         total,
@@ -277,20 +354,28 @@ const CheckoutPage = () => {
         deliveryDate: formData.deliveryType === "choose" ? formData.deliveryDate : now.toISOString().slice(0, 10)
       };
 
-      await addDoc(collection(db, 'orders'), orderData);
-
-      // Send email confirmation (async, don't block UI)
-      sendOrderConfirmationMail(orderData);
+      // Create order in Firestore (pending status)
+      const orderRef = await addDoc(collection(db, 'orders'), orderData);
+      orderData.orderDocId = orderRef.id;
 
       if (formData.paymentMethod === 'UPI') {
+        // Show modal, then call Razorpay when user clicks "Pay Now"
+        setPendingOrderData(orderData);
         setShowUPIModal(true);
       } else {
+        // COD flow: confirm order right away
+        await updateDoc(orderRef, {
+          paymentStatus: 'confirmed',
+          orderStatus: 'confirmed'
+        });
+
         // Remove cart items
         const deletePromises = cartItems.map(item => 
           deleteDoc(doc(db, 'carts', user.uid, 'items', item.id))
         );
         await Promise.all(deletePromises);
 
+        sendOrderConfirmationMail(orderData);
         router.push('/orders');
         toast.success('Order placed successfully!');
       }
@@ -299,6 +384,14 @@ const CheckoutPage = () => {
       toast.error('Failed to place order');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleUPIModalPay = () => {
+    setShowUPIModal(false);
+    if (pendingOrderData) {
+      handleRazorpayPayment(pendingOrderData);
+      setPendingOrderData(null);
     }
   };
 
@@ -322,9 +415,7 @@ const CheckoutPage = () => {
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
               Delivery Address
             </h2>
-            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* ...other inputs... */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Full Name *
@@ -533,7 +624,7 @@ const CheckoutPage = () => {
                     UPI Payment
                   </span>
                   <span className="block text-sm text-gray-500">
-                    <span className="font-semibold text-yellow-700">UPI payment is not enabled. Please use cash on delivery to prevent any loss. We are working on that.</span>
+                    <span className="font-semibold text-yellow-700">UPI payment is enabled. Order will be placed only after successful payment.</span>
                   </span>
                 </div>
               </label>
@@ -622,6 +713,7 @@ const CheckoutPage = () => {
       <UPIPaymentModal
         isOpen={showUPIModal}
         onClose={() => setShowUPIModal(false)}
+        onPay={handleUPIModalPay}
       />
     </div>
   );
