@@ -1,12 +1,15 @@
 import admin from 'firebase-admin';
-import path from 'path';
 
 if (!admin.apps.length) {
-  const serviceAccountPath = path.resolve('./secrets/bakery-toshankanwar-website-firebase-adminsdk-fbsvc-519e7fdf2a.json'); // adjust path to your location
-
   admin.initializeApp({
-    credential: admin.credential.cert(serviceAccountPath),
-    // Optional: databaseURL, storageBucket, etc.
+    credential: admin.credential.cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      // Replace literal "\n" with actual line breaks in the private key string
+      privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+    }),
+    // Optionally add databaseURL or storageBucket here if used
+    // databaseURL: process.env.FIREBASE_DATABASE_URL,
   });
 }
 
