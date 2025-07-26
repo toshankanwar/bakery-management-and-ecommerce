@@ -84,6 +84,11 @@ const PAYMENT_STATUS_CONFIG = {
     bgColor: 'bg-yellow-50',
     text: 'Payment Pending'
   },
+  confirmed: {
+    color: 'text-green-600',
+    bgColor: 'bg-green-50',
+    text: 'Payment Confirmed'
+  },
   completed: {
     color: 'text-green-600',
     bgColor: 'bg-green-50',
@@ -93,6 +98,11 @@ const PAYMENT_STATUS_CONFIG = {
     color: 'text-red-600',
     bgColor: 'bg-red-50',
     text: 'Payment Failed'
+  },
+  cancelled: {
+    color: 'text-red-600',
+    bgColor: 'bg-red-50',
+    text: 'Payment Cancelled'
   }
 };
 
@@ -244,7 +254,7 @@ const OrderCard = ({
   canReview,
   onOpenReview
 }) => {
-  const statusConfig = ORDER_STATUS_CONFIG[order.orderStatus];
+  const statusConfig = ORDER_STATUS_CONFIG[order.orderStatus] || ORDER_STATUS_CONFIG['pending'];
   const StatusIcon = statusConfig.icon;
 
   // Delivery date display logic
@@ -388,9 +398,9 @@ const OrderCard = ({
                       <div className="flex justify-between">
                         <span className="text-gray-600">Payment Status</span>
                         <span className={`font-medium ${
-                          PAYMENT_STATUS_CONFIG[order.paymentStatus].color
+                          PAYMENT_STATUS_CONFIG[order.paymentStatus]?.color || PAYMENT_STATUS_CONFIG['pending'].color
                         }`}>
-                          {PAYMENT_STATUS_CONFIG[order.paymentStatus].text}
+                          {PAYMENT_STATUS_CONFIG[order.paymentStatus]?.text || PAYMENT_STATUS_CONFIG['pending'].text}
                         </span>
                       </div>
                       <div className="flex justify-between">
@@ -530,9 +540,9 @@ const OrdersPage = () => {
           </div>
           
           <div style="margin-bottom: 30px; padding: 15px; background-color: #f9fafb; border-radius: 8px;">
-            <h3 style="color: #1a1a1a; margin-bottom: 10px;">Order Status: ${ORDER_STATUS_CONFIG[order.orderStatus].text}</h3>
+            <h3 style="color: #1a1a1a; margin-bottom: 10px;">Order Status: ${(ORDER_STATUS_CONFIG[order.orderStatus] || ORDER_STATUS_CONFIG['pending']).text}</h3>
             <p style="color: #4b5563; margin: 5px 0;">Payment Method: ${order.paymentMethod === 'COD' ? 'Cash on Delivery' : 'UPI Payment'}</p>
-            <p style="color: #4b5563; margin: 5px 0;">Payment Status: ${PAYMENT_STATUS_CONFIG[order.paymentStatus].text}</p>
+            <p style="color: #4b5563; margin: 5px 0;">Payment Status: ${(PAYMENT_STATUS_CONFIG[order.paymentStatus]?.text || PAYMENT_STATUS_CONFIG['pending'].text)}</p>
             <p style="color: #4b5563; margin: 5px 0;">Delivery: ${deliveryLabel}</p>
           </div>
   
@@ -696,7 +706,7 @@ const OrdersPage = () => {
             <p className="text-gray-600 mb-6">
               {filterStatus === 'all' 
                 ? "You haven't placed any orders yet"
-                : `No ${ORDER_STATUS_CONFIG[filterStatus].text.toLowerCase()} orders`
+                : `No ${(ORDER_STATUS_CONFIG[filterStatus] || ORDER_STATUS_CONFIG['pending']).text.toLowerCase()} orders`
               }
             </p>
             <motion.button

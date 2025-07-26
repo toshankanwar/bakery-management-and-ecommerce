@@ -210,6 +210,7 @@ export default function ProductPage() {
           doc(db, 'carts', user.uid, 'items', product.id),
           {
             ...product,
+            image: product.imageUrl || product.image || '',
             quantity: newQty,
             itemId: product.id,
             userId: user.uid,

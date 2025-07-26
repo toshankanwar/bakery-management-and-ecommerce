@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -23,25 +23,28 @@ import { toast } from 'react-hot-toast';
 import { 
   QrCodeIcon,
   XMarkIcon,
+  CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 
 // HARDCODED Razorpay credentials for demo ONLY. Replace with your own.
-const RAZORPAY_KEY_ID = "YOUR_RAZORPAY_KEY_ID"; // <-- Insert your Razorpay Key ID here
+const RAZORPAY_KEY_ID = "rzp_live_7p3V38KUQoolpn"; // <-- Insert your Razorpay Key ID here
 
 const MAIL_SERVER_URL = 'https://mail-server-toshan-bakery.onrender.com/send-order-confirmation'; 
 const indianStates = [
   'Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal','Andaman and Nicobar Islands','Chandigarh','Dadra and Nagar Haveli and Daman and Diu','Delhi','Jammu and Kashmir','Ladakh','Lakshadweep','Puducherry'
 ].sort();
 
+// UPI Payment Modal with white blur background
 const UPIPaymentModal = ({ isOpen, onClose, onPay }) => {
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(10px)' }}>
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
-        className="bg-white rounded-lg p-6 max-w-sm w-full relative"
+        className="bg-white rounded-lg p-6 max-w-sm w-full relative shadow-xl"
       >
         <button
           onClick={onClose}
@@ -51,13 +54,16 @@ const UPIPaymentModal = ({ isOpen, onClose, onPay }) => {
         </button>
         <div className="text-center">
           <QrCodeIcon className="h-8 w-8 mx-auto text-yellow-600 mb-4" />
-          <h3 className="text-lg font-semibold mb-2 text-yellow-700">Proceed to UPI Payment</h3>
+          <h3 className="text-lg font-semibold mb-2 text-yellow-700">Pay Securely via UPI</h3>
           <p className="text-sm text-yellow-700 mb-4">
-            Please proceed to pay using UPI. If you cancel, your order will not be placed.
+            We support instant and secure UPI payments.<br />
+            Please complete your payment to confirm your order. If you cancel, your order will not be placed.
           </p>
           <motion.button
             onClick={onPay}
-            className="mt-2 bg-green-600 text-white px-5 py-2 rounded-lg font-medium hover:bg-green-700"
+            className="mt-2 bg-green-600 text-white px-5 py-2 rounded-lg font-medium hover:bg-green-700 shadow"
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
           >
             Pay Now
           </motion.button>
@@ -66,6 +72,32 @@ const UPIPaymentModal = ({ isOpen, onClose, onPay }) => {
     </div>
   );
 };
+
+const OrderConfirmedEffect = ({ show }) => (
+  <AnimatePresence>
+    {show && (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.92 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.92 }}
+        transition={{ duration: 0.6 }}
+        className="fixed inset-0 z-[100] flex items-center justify-center"
+        style={{ background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(6px)' }}
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 24 }}
+          className="bg-white rounded-2xl shadow-2xl p-8 flex flex-col items-center"
+        >
+          <CheckCircleIcon className="h-14 w-14 text-green-600 mb-4 animate-pulse" />
+          <h2 className="text-2xl font-bold text-green-700 mb-2">Order Confirmed!</h2>
+          <p className="text-gray-700">Your order was successfully placed and is being processed.</p>
+        </motion.div>
+      </motion.div>
+    )}
+  </AnimatePresence>
+);
 
 const CheckoutPage = () => {
   const { user } = useAuthContext();
@@ -83,12 +115,13 @@ const CheckoutPage = () => {
     address: '',
     apartment: '',
     pincode: '',
-    paymentMethod: 'COD',
-    deliveryType: 'today',
+    paymentMethod: 'UPI', // PRIORITY: Default to UPI
+    deliveryType: 'choose',
     deliveryDate: '',
   });
   const [saveAddress, setSaveAddress] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [showOrderConfirmed, setShowOrderConfirmed] = useState(false);
 
   // Fetch saved address if available
   useEffect(() => {
@@ -163,6 +196,11 @@ const CheckoutPage = () => {
   };
 
   useEffect(() => {
+    if (formData.deliveryType === "choose" && !formData.deliveryDate) {
+      // Set deliveryDate to tomorrow by default
+      const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+      setFormData(prev => ({ ...prev, deliveryDate: tomorrow }));
+    }
     if (formData.deliveryType === "today") {
       setFormData(prev => ({ ...prev, deliveryDate: '' }));
     }
@@ -244,7 +282,7 @@ const CheckoutPage = () => {
       key: RAZORPAY_KEY_ID,
       amount: paymentOrder.amount,
       currency: "INR",
-      name: "Bakery Name",
+      name: "Toshan Bakery",
       description: "Your bakery order",
       order_id: paymentOrder.id,
       handler: async function (response) {
@@ -263,8 +301,12 @@ const CheckoutPage = () => {
           await Promise.all(deletePromises);
 
           sendOrderConfirmationMail(orderData);
+          setShowOrderConfirmed(true);
+          setTimeout(() => {
+            setShowOrderConfirmed(false);
+            router.push("/orders");
+          }, 1700); // Show effect for 1.7s before redirect
           toast.success("Payment confirmed & order placed!");
-          router.push("/orders");
         } else {
           await updateDoc(doc(db, "orders", orderData.orderDocId), {
             paymentStatus: "cancelled",
@@ -351,7 +393,7 @@ const CheckoutPage = () => {
         createdAt: now.toISOString(),
         updatedAt: now.toISOString(),
         deliveryType: formData.deliveryType,
-        deliveryDate: formData.deliveryType === "choose" ? formData.deliveryDate : now.toISOString().slice(0, 10)
+        deliveryDate: formData.deliveryType === "choose" ? formData.deliveryDate : ''
       };
 
       // Create order in Firestore (pending status)
@@ -363,9 +405,9 @@ const CheckoutPage = () => {
         setPendingOrderData(orderData);
         setShowUPIModal(true);
       } else {
-        // COD flow: confirm order right away
+        // COD flow: payment is pending, order is confirmed
         await updateDoc(orderRef, {
-          paymentStatus: 'confirmed',
+          paymentStatus: 'pending',
           orderStatus: 'confirmed'
         });
 
@@ -376,7 +418,11 @@ const CheckoutPage = () => {
         await Promise.all(deletePromises);
 
         sendOrderConfirmationMail(orderData);
-        router.push('/orders');
+        setShowOrderConfirmed(true);
+        setTimeout(() => {
+          setShowOrderConfirmed(false);
+          router.push('/orders');
+        }, 1700);
         toast.success('Order placed successfully!');
       }
     } catch (error) {
@@ -403,10 +449,11 @@ const CheckoutPage = () => {
     );
   }
 
-  const minDate = new Date().toISOString().slice(0,10);
+  const minDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-gray-50 py-12 relative">
+      <OrderConfirmedEffect show={showOrderConfirmed} />
       <div className="max-w-3xl mx-auto px-4">
         <h1 className="text-2xl font-bold text-gray-900 mb-8">Checkout</h1>
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -416,6 +463,8 @@ const CheckoutPage = () => {
               Delivery Address
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* ... same as before ... */}
+              {/* all address fields unchanged */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Full Name *
@@ -556,17 +605,6 @@ const CheckoutPage = () => {
                 <input
                   type="radio"
                   name="deliveryType"
-                  value="today"
-                  checked={formData.deliveryType === 'today'}
-                  onChange={handleInputChange}
-                  className="h-4 w-4 text-green-600 focus:ring-green-500"
-                />
-                <span className="ml-2 text-sm text-gray-700">Today</span>
-              </label>
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  name="deliveryType"
                   value="choose"
                   checked={formData.deliveryType === 'choose'}
                   onChange={handleInputChange}
@@ -579,8 +617,8 @@ const CheckoutPage = () => {
                   name="deliveryDate"
                   value={formData.deliveryDate}
                   onChange={handleInputChange}
-                  disabled={formData.deliveryType !== 'choose'}
                   className="ml-2 px-2 py-1 border border-gray-300 rounded-md text-gray-900"
+                  required
                 />
               </label>
             </div>
@@ -596,6 +634,26 @@ const CheckoutPage = () => {
                 <input
                   type="radio"
                   name="paymentMethod"
+                  value="UPI"
+                  checked={formData.paymentMethod === 'UPI'}
+                  onChange={handleInputChange}
+                  className="h-4 w-4 text-green-600 focus:ring-green-500"
+                />
+                <div className="ml-3">
+                  <span className="block text-sm font-medium text-gray-900">
+                    UPI Payment (Recommended)
+                  </span>
+                  <span className="block text-sm text-gray-500">
+                    <span className="font-semibold text-green-700">
+                      We recommend UPI payments for fast, secure, and instant order confirmation.
+                    </span>
+                  </span>
+                </div>
+              </label>
+              <label className="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
+                <input
+                  type="radio"
+                  name="paymentMethod"
                   value="COD"
                   checked={formData.paymentMethod === 'COD'}
                   onChange={handleInputChange}
@@ -606,25 +664,7 @@ const CheckoutPage = () => {
                     Cash on Delivery
                   </span>
                   <span className="block text-sm text-gray-500">
-                    Pay when you receive your order
-                  </span>
-                </div>
-              </label>
-              <label className="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value="UPI"
-                  checked={formData.paymentMethod === 'UPI'}
-                  onChange={handleInputChange}
-                  className="h-4 w-4 text-green-600 focus:ring-green-500"
-                />
-                <div className="ml-3">
-                  <span className="block text-sm font-medium text-gray-900">
-                    UPI Payment
-                  </span>
-                  <span className="block text-sm text-gray-500">
-                    <span className="font-semibold text-yellow-700">UPI payment is enabled. Order will be placed only after successful payment.</span>
+                    Pay when you receive your order. Payment status will remain pending until delivery.
                   </span>
                 </div>
               </label>
