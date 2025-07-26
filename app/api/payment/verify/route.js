@@ -8,6 +8,9 @@ export async function POST(request) {
   try {
     const body = await request.json();
     console.log("Incoming payment verification request body:", body);
+    console.log("PROJECT_ID:", process.env.FIREBASE_PROJECT_ID);
+    console.log("CLIENT_EMAIL:", process.env.FIREBASE_CLIENT_EMAIL);
+    console.log("PRIVATE_KEY length:", process.env.FIREBASE_PRIVATE_KEY?.length);
 
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderDocId } = body || {};
 

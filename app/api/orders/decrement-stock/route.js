@@ -5,6 +5,9 @@ export async function POST(request) {
   try {
     const body = await request.json();
     console.log('Received body:', body);
+    console.log("PROJECT_ID:", process.env.FIREBASE_PROJECT_ID);
+    console.log("CLIENT_EMAIL:", process.env.FIREBASE_CLIENT_EMAIL);
+    console.log("PRIVATE_KEY length:", process.env.FIREBASE_PRIVATE_KEY?.length);
 
     const { orderDocId, paymentStatus, orderItems } = body;
 
