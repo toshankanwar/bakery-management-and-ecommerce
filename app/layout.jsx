@@ -27,6 +27,11 @@ const getTitleByPath = (pathname) => {
   if (pathname.startsWith("/search")) return "Search | Toshan Bakery";
   if (pathname.startsWith("/profile")) return "Profile | Toshan Bakery";
   if (pathname === "/login") return "Login | Toshan Bakery";
+  if (pathname === "/favourite") return "Favourite | Toshan Bakery";
+  if (pathname === "/privacy-policy") return "Privacy Policy | Toshan Bakery";
+  if (pathname === "/terms-and-conditions") return "Terms and Conditions | Toshan Bakery";
+  if (pathname === "/cancellation-and-refund") return "Cancellation and Refund | Toshan Bakery";
+  if (pathname === "/shipping-and-delivery") return "Shipping and Delivery | Toshan Bakery";
   
   // Dynamically show product name in title if on a product page
   // Expected product page route: /product/[slug] or /shop/[slug]
