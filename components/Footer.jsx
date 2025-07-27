@@ -125,7 +125,7 @@ const Footer = () => {
               Quick Links
             </motion.h3>
             <motion.div variants={containerVariants} className="space-y-2">
-              {['About', 'Shop', 'Special Orders', 'Careers'].map((item) => (
+              {['About', 'Shop', 'Orders', 'Favourite'].map((item) => (
                 <motion.div key={item} variants={itemVariants}>
                   <Link 
                     href={`/${item.toLowerCase().replace(' ', '-')}`}

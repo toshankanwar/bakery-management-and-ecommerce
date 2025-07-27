@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 import Toast from '@/components/Toast';
 
 const ContactPage = () => {
@@ -253,18 +254,18 @@ const ContactPage = () => {
             </motion.a>
           </div>
         </form>
-
         <div className="mt-6 text-center text-sm text-gray-500">
-          By submitting this form, you agree to our{' '}
-          <a href="/privacy" className="font-medium text-green-600 hover:text-green-500 transition-colors">
-            Privacy Policy
-          </a>
-          {' '}and{' '}
-          <a href="/terms" className="font-medium text-green-600 hover:text-green-500 transition-colors">
-            Terms of Service
-          </a>
-          .
-        </div>
+  By submitting this form, you agree to our{' '}
+  <Link href="/privacy-policy" className="font-medium text-green-600 hover:text-green-500 transition-colors">
+    Privacy Policy
+  </Link>{' '}
+  and{' '}
+  <Link href="/terms-and-conditions" className="font-medium text-green-600 hover:text-green-500 transition-colors">
+    Terms of Service
+  </Link>
+  .
+</div>
+
       </motion.div>
     </div>
   );
