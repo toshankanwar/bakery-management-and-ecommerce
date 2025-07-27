@@ -332,7 +332,7 @@ const CheckoutPage = () => {
   // Razorpay payment handler (UPI only)
   const handleRazorpayPayment = async (orderData) => {
     // Create payment order using API route (hardcoded keys server-side)
-    const paymentOrder = await fetch('/api/payment/order', {
+    const paymentOrder = await fetch('https://bakery-online-payment-server.onrender.com/api/payment-order', {
       method: 'POST',
       body: JSON.stringify({ amount: orderData.total * 100 }),
       headers: { 'Content-Type': 'application/json' }
@@ -347,33 +347,77 @@ const CheckoutPage = () => {
       order_id: paymentOrder.id,
       handler: async function (response) {
         // Payment success, verify on backend
-        const verify = await fetch('/api/payment/verify', {
+        const verify = await fetch('https://bakery-online-payment-server.onrender.com/api/payment-verify', {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ...response, orderDocId: orderData.orderDocId }),
         }).then((res) => res.json());
 
         if (verify.status === "success") {
-          // Remove cart items after payment success
+          // Payment and Order both confirmed
+          // Remove cart items
           const deletePromises = cartItems.map(item => 
             deleteDoc(doc(db, 'carts', user.uid, 'items', item.id))
           );
           await Promise.all(deletePromises);
-
+        
           sendOrderConfirmationMail(orderData);
           setShowOrderConfirmed(true);
+          toast.success("Payment confirmed & order placed!");
+        
           setTimeout(() => {
             setShowOrderConfirmed(false);
             router.push("/orders");
-          }, 1800); // Show effect for 1.8s before redirect
-          toast.success("Payment confirmed & order placed!");
-        } else {
+          }, 1800);
+        
+        } else if (verify.status === "payment_confirmed_order_cancelled") {
+          // Payment succeeded, but order cancelled due to insufficient stock
+          await updateDoc(doc(db, "orders", orderData.orderDocId), {
+            paymentStatus: "confirmed",
+            orderStatus: "cancelled",
+          });
+        
+          toast.error(
+            "Payment confirmed, but order cancelled due to insufficient stock. A refund has been initiated."
+          );
+        
+          // Optionally show UI/notification about refund
+          // Do NOT clear cart because order was cancelled
+          // You may redirect to orders page or show help info
+          setShowOrderConfirmed(false);
+        
+          setTimeout(() => {
+            router.push("/orders");
+          }, 2500);
+        
+        } else if (verify.status === "cancelled") {
+          // Both payment and order cancelled (e.g., signature mismatch)
           await updateDoc(doc(db, "orders", orderData.orderDocId), {
             paymentStatus: "cancelled",
             orderStatus: "cancelled",
           });
+        
           toast.error("Payment verification failed. Order not confirmed.");
+          setShowOrderConfirmed(false);
+        
+          // Optionally redirect user to retry payment or home page
+          setTimeout(() => {
+            router.push("/cart");
+          }, 1800);
+        
+        } else if (verify.status === "error") {
+          // Some error happened (e.g. order not found)
+          toast.error(`Error: ${verify.error || "Payment verification failed."}`);
+        
+          // Depending on your UI, optionally redirect or reset states
+          setShowOrderConfirmed(false);
+        
+        } else {
+          // Unknown or unexpected status, fail-safe handling
+          toast.error("Payment verification failed due to unknown error.");
+          setShowOrderConfirmed(false);
         }
+        
       },
       modal: {
         ondismiss: async function () {
@@ -465,26 +509,109 @@ const CheckoutPage = () => {
         setPendingOrderData(orderData);
         setShowUPIModal(true);
       } else {
-        // COD flow: payment is pending, order is confirmed
-        await updateDoc(orderRef, {
-          paymentStatus: 'pending',
-          orderStatus: 'confirmed'
-        });
-
-        // Remove cart items
-        const deletePromises = cartItems.map(item => 
-          deleteDoc(doc(db, 'carts', user.uid, 'items', item.id))
-        );
-        await Promise.all(deletePromises);
-
-        sendOrderConfirmationMail(orderData);
-        setShowOrderConfirmed(true);
-        setTimeout(() => {
+        // COD flow: payment is pending, order is confirmed transactionally only if backend confirms
+      
+        try {
+          console.log('Calling decrement-stock API with:', {
+            orderDocId: orderData.orderDocId,
+            paymentStatus: orderData.paymentStatus,
+            orderItems: orderData.items,
+          });
+      
+          const response = await fetch('https://bakery-item-decrement-server.onrender.com/api/confirm-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              orderDocId: orderData.orderDocId,
+              paymentStatus: orderData.paymentStatus || 'pending',
+              orderItems: orderData.items,
+            }),
+          });
+      
+          if (!response.ok) {
+            // Server responded with error status (4xx or 5xx)
+            const errorData = await response.json().catch(() => ({}));
+            console.error('Stock decrement API error:', errorData);
+            toast.error('Failed to place order due to server error. Please try again.');
+            return; // stop further execution
+          }
+      
+          const apiResult = await response.json();
+      
+          // Handle order confirmation status
+          if (apiResult.success === true || apiResult.status === 'success') {
+            // Order confirmed
+            // Remove cart items
+            const deletePromises = cartItems.map(item =>
+              deleteDoc(doc(db, 'carts', user.uid, 'items', item.id))
+            );
+            await Promise.all(deletePromises);
+      
+            sendOrderConfirmationMail(orderData);
+            setShowOrderConfirmed(true);
+            toast.success('Order placed successfully!');
+      
+            setTimeout(() => {
+              setShowOrderConfirmed(false);
+              router.push('/orders');
+            }, 1800);
+      
+          } else if (
+            apiResult.success === false ||
+            apiResult.status === 'payment_confirmed_order_cancelled'
+          ) {
+            // Payment confirmed but order cancelled due to insufficient stock
+      
+            // Update order status to cancelled (if not already)
+            await updateDoc(doc(db, 'orders', orderData.orderDocId), {
+              orderStatus: 'cancelled',
+            });
+      
+            toast.error(
+              apiResult.message ||
+                'Order cancelled due to insufficient stock.'
+            );
+            setShowOrderConfirmed(false);
+      
+            // Redirect to orders page (not cart)
+            setTimeout(() => {
+              router.push('/orders');
+            }, 2500);
+      
+          } else if (
+            apiResult.status === 'cancelled'
+          ) {
+            // New scenario: order not confirmed (order cancelled)
+            // Update order status to cancelled just in case
+            await updateDoc(doc(db, 'orders', orderData.orderDocId), {
+              orderStatus: 'cancelled',
+            });
+      
+            toast.error(
+              apiResult.message ||
+                'Order could not be confirmed and has been cancelled.'
+            );
+            setShowOrderConfirmed(false);
+      
+            // Redirect to orders page (not cart)
+            setTimeout(() => {
+              router.push('/orders');
+            }, 2500);
+      
+          } else {
+            // Unknown status returned
+            toast.error('Unexpected response from server. Please contact support.');
+            setShowOrderConfirmed(false);
+          }
+        } catch (error) {
+          console.error('Error calling stock decrement API:', error);
+          toast.error(
+            'Failed to place order. Please check your internet connection and try again.'
+          );
           setShowOrderConfirmed(false);
-          router.push('/orders');
-        }, 1800);
-        toast.success('Order placed successfully!');
+        }
       }
+      
     } catch (error) {
       console.error('Error creating order:', error, JSON.stringify(error));
       toast.error('Failed to place order');
