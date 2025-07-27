@@ -13,7 +13,6 @@ import {
   deleteDoc,
 } from 'firebase/firestore';
 import {
-  updateProfile,
   sendEmailVerification,
   deleteUser,
 } from 'firebase/auth';
@@ -27,9 +26,7 @@ import {
   PencilSquareIcon,
   CheckIcon,
   ArrowPathIcon,
-  CameraIcon,
   TrashIcon,
-  ShieldCheckIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
 
@@ -163,9 +160,8 @@ export default function ProfilePage() {
     if (!validateForm()) return;
     setSaving(true);
     try {
-      if (user.displayName !== profileData.displayName) {
-        await updateProfile(auth.currentUser, { displayName: profileData.displayName });
-      }
+      // Remove updateProfile call for displayName to prevent its update
+      // Only update Firestore user doc for editable fields
       await setDoc(
         doc(db, 'users', user.uid),
         {
@@ -233,6 +229,7 @@ export default function ProfilePage() {
           </div>
           <div className="flex-1 min-h-[7.5rem]">
             <div className="flex items-center gap-2">
+              {/* Display displayName as read-only text */}
               <h2 className="text-2xl md:text-3xl font-bold text-gray-900">{profileData.displayName || 'Your Name'}</h2>
               {user?.emailVerified ? (
                 <CheckIcon className="h-5 w-5 text-green-500" title="Email verified" />
@@ -246,6 +243,7 @@ export default function ProfilePage() {
                 </button>
               )}
             </div>
+            {/* Display email as read-only text */}
             <div className="flex items-center mt-1 text-gray-500 gap-3 text-sm">
               <EnvelopeIcon className="h-5 w-5 text-gray-400" />
               {profileData.email}
@@ -281,58 +279,132 @@ export default function ProfilePage() {
               className="space-y-8 bg-white shadow rounded-xl p-8"
             >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
-                  <input type="text" name="displayName" value={profileData.displayName} onChange={handleInputChange} required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900" placeholder="Your full name" disabled={saving} />
+                {/* displayName field is replaced with read-only text */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                  <p className="p-2 bg-gray-100 rounded text-gray-700">{profileData.displayName || 'Your Name'}</p>
                 </div>
+                {/* Email as read-only */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <p className="p-2 bg-gray-100 rounded text-gray-700">{profileData.email}</p>
+                </div>
+
+                {/* Editable fields below */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
-                  <input type="tel" name="mobile" value={profileData.mobile} onChange={handleInputChange} maxLength={10}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900" placeholder="10-digit mobile number" disabled={saving} />
+                  <input
+                    type="tel"
+                    name="mobile"
+                    value={profileData.mobile}
+                    onChange={handleInputChange}
+                    maxLength={10}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900"
+                    placeholder="10-digit mobile number"
+                    disabled={saving}
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
-                  <select name="state" value={profileData.state} onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900" disabled={saving}>
+                  <select
+                    name="state"
+                    value={profileData.state}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900"
+                    disabled={saving}
+                  >
                     <option value="">Select your state</option>
-                    {indianStates.map(state => <option key={state} value={state}>{state}</option>)}
+                    {indianStates.map(state => (
+                      <option key={state} value={state}>{state}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
-                  <input type="text" name="city" value={profileData.city} onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900" placeholder="Your city" disabled={saving} />
+                  <input
+                    type="text"
+                    name="city"
+                    value={profileData.city}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900"
+                    placeholder="Your city"
+                    disabled={saving}
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Street Address</label>
-                  <input type="text" name="address" value={profileData.address} onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900" placeholder="Street address" disabled={saving} />
+                  <input
+                    type="text"
+                    name="address"
+                    value={profileData.address}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900"
+                    placeholder="Street address"
+                    disabled={saving}
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Apartment, Suite, etc.</label>
-                  <input type="text" name="apartment" value={profileData.apartment} onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900" placeholder="Apartment, suite, etc." disabled={saving} />
+                  <input
+                    type="text"
+                    name="apartment"
+                    value={profileData.apartment}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900"
+                    placeholder="Apartment, suite, etc."
+                    disabled={saving}
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">PIN Code</label>
-                  <input type="text" name="pincode" value={profileData.pincode} onChange={handleInputChange} maxLength={6}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900" placeholder="6-digit PIN code" disabled={saving} />
+                  <input
+                    type="text"
+                    name="pincode"
+                    value={profileData.pincode}
+                    onChange={handleInputChange}
+                    maxLength={6}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900"
+                    placeholder="6-digit PIN code"
+                    disabled={saving}
+                  />
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
-                  <textarea name="bio" rows={3} value={profileData.bio} onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900 resize-none" placeholder="Tell us about yourself" disabled={saving} />
+                  <textarea
+                    name="bio"
+                    rows={3}
+                    value={profileData.bio}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 text-gray-900 resize-none"
+                    placeholder="Tell us about yourself"
+                    disabled={saving}
+                  />
                 </div>
               </div>
               <div className="flex gap-3 justify-end mt-6">
-                <motion.button type="button" whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+                <motion.button
+                  type="button"
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
                   onClick={handleCancel}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100">Cancel</motion.button>
-                <motion.button type="submit" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100"
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  type="submit"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   disabled={saving}
-                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center gap-2">
-                  {saving ? <><ArrowPathIcon className="h-5 w-5 animate-spin" /> Saving...</> : 'Save Changes'}
+                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center gap-2"
+                >
+                  {saving ? (
+                    <>
+                      <ArrowPathIcon className="h-5 w-5 animate-spin" /> Saving...
+                    </>
+                  ) : (
+                    'Save Changes'
+                  )}
                 </motion.button>
               </div>
             </motion.form>
@@ -395,7 +467,10 @@ export default function ProfilePage() {
                   <XCircleIcon className="h-6 w-6" /> Confirm Account Deletion
                 </h2>
                 <p className="mb-7 text-gray-700">
-                  Are you sure you want to <span className="font-semibold text-red-700">permanently delete your account?</span><br/>This action cannot be undone.
+                  Are you sure you want to{' '}
+                  <span className="font-semibold text-red-700">permanently delete your account?</span>
+                  <br />
+                  This action cannot be undone.
                 </p>
                 <div className="flex justify-center gap-4">
                   <button
@@ -410,9 +485,13 @@ export default function ProfilePage() {
                     className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 flex items-center gap-2"
                     disabled={deletingAccount}
                   >
-                    {deletingAccount
-                      ? (<><ArrowPathIcon className="h-5 w-5 animate-spin" /> Deleting...</>)
-                      : 'Delete Account'}
+                    {deletingAccount ? (
+                      <>
+                        <ArrowPathIcon className="h-5 w-5 animate-spin" /> Deleting...
+                      </>
+                    ) : (
+                      'Delete Account'
+                    )}
                   </button>
                 </div>
               </motion.div>
