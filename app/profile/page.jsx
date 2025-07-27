@@ -279,16 +279,7 @@ export default function ProfilePage() {
               className="space-y-8 bg-white shadow rounded-xl p-8"
             >
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                {/* displayName field is replaced with read-only text */}
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                  <p className="p-2 bg-gray-100 rounded text-gray-700">{profileData.displayName || 'Your Name'}</p>
-                </div>
-                {/* Email as read-only */}
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                  <p className="p-2 bg-gray-100 rounded text-gray-700">{profileData.email}</p>
-                </div>
+               
 
                 {/* Editable fields below */}
                 <div>
