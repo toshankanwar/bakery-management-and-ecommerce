@@ -13,12 +13,10 @@ import {
   orderBy, 
   getDocs, 
   limit,
-  addDoc
 } from 'firebase/firestore';
 import { toast } from 'react-hot-toast';
 import { 
   TruckIcon,
-  DocumentTextIcon,
   CheckCircleIcon,
   ClockIcon,
   XCircleIcon,
@@ -29,9 +27,10 @@ import {
   PhoneIcon,
   BanknotesIcon,
   CalendarIcon,
-  PencilSquareIcon
+  PencilSquareIcon,
 } from '@heroicons/react/24/outline';
 import html2pdf from 'html2pdf.js';
+
 
 const ORDER_STATUS_CONFIG = {
   pending: {
@@ -39,72 +38,73 @@ const ORDER_STATUS_CONFIG = {
     color: 'text-yellow-600',
     bgColor: 'bg-yellow-50',
     borderColor: 'border-yellow-200',
-    text: 'Order Pending'
+    text: 'Order Pending',
   },
   confirmed: {
     icon: CheckCircleIcon,
     color: 'text-blue-600',
     bgColor: 'bg-blue-50',
     borderColor: 'border-blue-200',
-    text: 'Order Confirmed'
+    text: 'Order Confirmed',
   },
   processing: {
     icon: TruckIcon,
     color: 'text-purple-600',
     bgColor: 'bg-purple-50',
     borderColor: 'border-purple-200',
-    text: 'Processing'
+    text: 'Processing',
   },
   shipped: {
     icon: TruckIcon,
     color: 'text-indigo-600',
     bgColor: 'bg-indigo-50',
     borderColor: 'border-indigo-200',
-    text: 'Shipped'
+    text: 'Shipped',
   },
   delivered: {
     icon: CheckCircleIcon,
     color: 'text-green-600',
     bgColor: 'bg-green-50',
     borderColor: 'border-green-200',
-    text: 'Delivered'
+    text: 'Delivered',
   },
   cancelled: {
     icon: XCircleIcon,
     color: 'text-red-600',
     bgColor: 'bg-red-50',
     borderColor: 'border-red-200',
-    text: 'Cancelled'
-  }
+    text: 'Cancelled',
+  },
 };
 
 const PAYMENT_STATUS_CONFIG = {
   pending: {
     color: 'text-yellow-600',
     bgColor: 'bg-yellow-50',
-    text: 'Payment Pending'
+    text: 'Payment Pending',
   },
   confirmed: {
     color: 'text-green-600',
     bgColor: 'bg-green-50',
-    text: 'Payment Confirmed'
+    text: 'Payment Confirmed',
   },
   completed: {
     color: 'text-green-600',
     bgColor: 'bg-green-50',
-    text: 'Payment Completed'
+    text: 'Payment Completed',
   },
   failed: {
     color: 'text-red-600',
     bgColor: 'bg-red-50',
-    text: 'Payment Failed'
+    text: 'Payment Failed',
   },
   cancelled: {
     color: 'text-red-600',
     bgColor: 'bg-red-50',
-    text: 'Payment Cancelled'
-  }
+    text: 'Payment Cancelled',
+  },
 };
+
 
 // --- Review Modal ---
 const ReviewModal = ({ open, onClose, item, orderId, userId }) => {
@@ -208,6 +208,7 @@ const ReviewModal = ({ open, onClose, item, orderId, userId }) => {
   );
 };
 
+
 // --- Order Item ---
 const OrderItem = ({ item, canReview, onOpenReview }) => (
   <div className="flex items-center space-x-4">
@@ -246,13 +247,17 @@ const OrderItem = ({ item, canReview, onOpenReview }) => (
   </div>
 );
 
+
+// --- Order Card ---
 const OrderCard = ({
   order,
   isExpanded,
   onToggle,
   onDownloadInvoice,
   canReview,
-  onOpenReview
+  onOpenReview,
+  onCancelOrder,
+  canceling = false,
 }) => {
   const statusConfig = ORDER_STATUS_CONFIG[order.orderStatus] || ORDER_STATUS_CONFIG['pending'];
   const StatusIcon = statusConfig.icon;
@@ -276,6 +281,8 @@ const OrderCard = ({
   } else {
     deliveryDisplay = null;
   }
+
+  const canCancel = ['confirmed', 'processing', 'shipped'].includes(order.orderStatus);
 
   return (
     <motion.div
@@ -301,7 +308,6 @@ const OrderCard = ({
               <p className="text-sm text-gray-500">
                 {new Date(order.createdAt).toLocaleString()}
               </p>
-              {/* Delivery display */}
               {deliveryDisplay && (
                 <div className="mt-1">{deliveryDisplay}</div>
               )}
@@ -423,7 +429,7 @@ const OrderCard = ({
                           ₹{order.total.toFixed(2)}
                         </span>
                       </div>
-                      {/* Delivery date in Payment Details for extra visibility */}
+
                       {order.deliveryType && (
                         <div className="flex justify-between">
                           <span className="text-gray-600">Delivery</span>
@@ -437,19 +443,31 @@ const OrderCard = ({
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Actions */}
-              <div className="flex justify-end pt-4 border-t gap-2">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => onDownloadInvoice(order)}
-                  className="inline-flex items-center px-4 py-2 rounded-lg border border-green-600 text-green-600 hover:bg-green-50"
-                >
-                  <ArrowDownTrayIcon className="h-5 w-5 mr-2" />
-                  Download Invoice
-                </motion.button>
+                {/* Actions */}
+                <div className="flex justify-end pt-4 border-t gap-2">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => onDownloadInvoice(order)}
+                    className="inline-flex items-center px-4 py-2 rounded-lg border border-green-600 text-green-600 hover:bg-green-50"
+                  >
+                    <ArrowDownTrayIcon className="h-5 w-5 mr-2" />
+                    Download Invoice
+                  </motion.button>
+
+                  {canCancel && (
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => onCancelOrder(order.id)}
+                      className="inline-flex items-center px-4 py-2 rounded-lg border border-red-600 text-red-600 hover:bg-red-50"
+                      disabled={canceling}
+                    >
+                      {canceling ? 'Cancelling...' : 'Cancel Order'}
+                    </motion.button>
+                  )}
+                </div>
               </div>
             </div>
           </motion.div>
@@ -458,6 +476,7 @@ const OrderCard = ({
     </motion.div>
   );
 };
+
 
 const OrdersPage = () => {
   const { user } = useAuthContext();
@@ -470,6 +489,7 @@ const OrdersPage = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [cancelingOrderId, setCancelingOrderId] = useState(null);
   const [reviewModal, setReviewModal] = useState({ open: false, item: null, orderId: null });
   const ordersPerPage = 5;
 
@@ -493,7 +513,7 @@ const OrdersPage = () => {
         const snapshot = await getDocs(q);
         const orderData = snapshot.docs.map(doc => ({
           id: doc.id,
-          ...doc.data()
+          ...doc.data(),
         }));
 
         setOrders(orderData);
@@ -501,8 +521,8 @@ const OrdersPage = () => {
       } catch (error) {
         console.error('Error fetching orders:', {
           error: error.message,
-          timestamp: '2025-06-16 17:48:48',
-          user: 'Kala-bot-apk'
+          timestamp: new Date().toISOString(),
+          user: user.uid,
         });
         setError('Failed to load orders');
         toast.error('Failed to load orders');
@@ -517,12 +537,11 @@ const OrdersPage = () => {
 
   const handleLoadMore = () => {
     setLoadingMore(true);
-    setPage(prev => prev + 1);
+    setPage(prev => prev + 5);
   };
 
   const generateInvoice = async (order) => {
     try {
-      // Delivery date for invoice
       let deliveryLabel = '';
       if (order.deliveryType === 'today') {
         deliveryLabel = 'Today';
@@ -530,7 +549,6 @@ const OrdersPage = () => {
         deliveryLabel = order.deliveryDate;
       }
 
-      // Create the invoice HTML content
       const invoiceHtml = `
         <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto;">
           <div style="text-align: center; margin-bottom: 30px;">
@@ -545,7 +563,7 @@ const OrdersPage = () => {
             <p style="color: #4b5563; margin: 5px 0;">Payment Status: ${(PAYMENT_STATUS_CONFIG[order.paymentStatus]?.text || PAYMENT_STATUS_CONFIG['pending'].text)}</p>
             <p style="color: #4b5563; margin: 5px 0;">Delivery: ${deliveryLabel}</p>
           </div>
-  
+
           <div style="margin-bottom: 30px;">
             <h3 style="color: #1a1a1a; margin-bottom: 10px;">Shipping Address:</h3>
             <div style="padding: 15px; background-color: #f9fafb; border-radius: 8px;">
@@ -556,34 +574,34 @@ const OrdersPage = () => {
               <p style="color: #4b5563; margin: 5px 0;">Phone: ${order.address.mobile}</p>
             </div>
           </div>
-  
+
           <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
-  <thead>
-    <tr style="background-color: #f3f4f6;">
-      <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb; color: #4b5563;">Item</th>
-      <th style="padding: 12px; text-align: center; border-bottom: 2px solid #e5e7eb; color: #4b5563;">Quantity</th>
-      <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e5e7eb; color: #4b5563;">Price</th>
-      <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e5e7eb; color: #4b5563;">Total</th>
-    </tr>
-  </thead>
-  <tbody>
-    ${order.items.map(item => `
-      <tr>
-        <td style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; color: #4b5563;">${item.name}</td>
-        <td style="padding: 12px; text-align: center; border-bottom: 1px solid #e5e7eb; color: #4b5563;">${item.quantity}</td>
-        <td style="padding: 12px; text-align: right; border-bottom: 1px solid #e5e7eb; color: #4b5563;">₹${item.price.toFixed(2)}</td>
-        <td style="padding: 12px; text-align: right; border-bottom: 1px solid #e5e7eb; color: #4b5563;">₹${(item.price * item.quantity).toFixed(2)}</td>
-      </tr>
-    `).join('')}
-  </tbody>
-</table>
-  
+            <thead>
+              <tr style="background-color: #f3f4f6;">
+                <th style="padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb; color: #4b5563;">Item</th>
+                <th style="padding: 12px; text-align: center; border-bottom: 2px solid #e5e7eb; color: #4b5563;">Quantity</th>
+                <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e5e7eb; color: #4b5563;">Price</th>
+                <th style="padding: 12px; text-align: right; border-bottom: 2px solid #e5e7eb; color: #4b5563;">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${order.items.map(item => `
+                <tr>
+                  <td style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; color: #4b5563;">${item.name}</td>
+                  <td style="padding: 12px; text-align: center; border-bottom: 1px solid #e5e7eb; color: #4b5563;">${item.quantity}</td>
+                  <td style="padding: 12px; text-align: right; border-bottom: 1px solid #e5e7eb; color: #4b5563;">₹${item.price.toFixed(2)}</td>
+                  <td style="padding: 12px; text-align: right; border-bottom: 1px solid #e5e7eb; color: #4b5563;">₹${(item.price * item.quantity).toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
           <div style="text-align: right; margin-top: 20px; padding: 20px; background-color: #f9fafb; border-radius: 8px;">
             <p style="color: #4b5563; margin: 5px 0;">Subtotal: ₹${order.subtotal.toFixed(2)}</p>
             <p style="color: #4b5563; margin: 5px 0;">Shipping: ${order.shipping === 0 ? 'Free' : `₹${order.shipping.toFixed(2)}`}</p>
             <h3 style="color: #1a1a1a; margin: 10px 0;">Total: ₹${order.total.toFixed(2)}</h3>
           </div>
-  
+
           <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
             <p style="color: #6b7280; font-size: 14px;">Thank you for your purchase!</p>
             <p style="color: #6b7280; font-size: 14px;">
@@ -592,11 +610,11 @@ const OrdersPage = () => {
           </div>
         </div>
       `;
-  
+
       // Create an element to render the invoice
       const element = document.createElement('div');
       element.innerHTML = invoiceHtml;
-  
+
       // Configure pdf options
       const opt = {
         margin: [10, 10],
@@ -605,39 +623,37 @@ const OrdersPage = () => {
         html2canvas: { 
           scale: 2,
           useCORS: true,
-          logging: false
+          logging: false,
         },
         jsPDF: { 
           unit: 'mm', 
           format: 'a4', 
-          orientation: 'portrait'
-        }
+          orientation: 'portrait',
+        },
       };
-  
+
       // Generate PDF
       toast.promise(
         html2pdf().set(opt).from(element).save(),
         {
           pending: 'Generating invoice...',
           success: 'Invoice downloaded successfully',
-          error: 'Failed to generate invoice'
+          error: 'Failed to generate invoice',
         }
       );
-  
+
     } catch (error) {
       console.error('Error generating invoice:', {
         error: error.message,
-        timestamp: '2025-06-17 17:55:22',
-        user: 'Kala-bot-apk'
+        timestamp: new Date().toISOString(),
+        user: user?.uid,
       });
       toast.error('Failed to generate invoice');
     }
   };
 
-  // Only allow reviews for delivered orders
   const canReviewOrder = (order) => order.orderStatus === 'delivered';
 
-  // Open review modal for item
   const handleOpenReview = (item, orderId) => {
     setReviewModal({ open: true, item, orderId });
   };
@@ -646,8 +662,49 @@ const OrdersPage = () => {
     setReviewModal({ open: false, item: null, orderId: null });
   };
 
-  const filteredOrders = filterStatus === 'all' 
-    ? orders 
+  const handleCancelOrder = async (orderId) => {
+    if (!confirm('Are you sure you want to cancel this order?')) return;
+
+    setCancelingOrderId(orderId);
+    try {
+      const res = await fetch('https://bakery-cancle-order-server.onrender.com/api/orders/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.message || 'Failed to cancel order');
+      } else {
+        toast.success(data.message || 'Order cancelled successfully');
+
+        // Refresh orders list
+        setPage(10);
+       
+
+        // Refetch orders after cancellation
+        const ordersRef = collection(db, 'orders');
+        const q = query(
+          ordersRef,
+          where('userId', '==', user.uid),
+          orderBy('createdAt', 'desc'),
+          limit(5)
+        );
+        const snapshot = await getDocs(q);
+        const orderData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setOrders(orderData);
+        setHasMore(orderData.length === 5);
+      }
+    } catch (error) {
+      console.error('Error cancelling order:', error);
+      toast.error('Failed to cancel order');
+    }
+    setCancelingOrderId(null);
+  };
+
+  const filteredOrders = filterStatus === 'all'
+    ? orders
     : orders.filter(order => order.orderStatus === filterStatus);
 
   if (loading) {
@@ -680,7 +737,7 @@ const OrdersPage = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
           <h1 className="text-2xl font-bold text-gray-900">My Orders</h1>
-          
+
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
@@ -731,6 +788,8 @@ const OrdersPage = () => {
                 onDownloadInvoice={generateInvoice}
                 canReview={canReviewOrder(order)}
                 onOpenReview={(item) => handleOpenReview(item, order.id)}
+                onCancelOrder={handleCancelOrder}
+                canceling={cancelingOrderId === order.id}
               />
             ))}
 
