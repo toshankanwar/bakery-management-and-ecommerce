@@ -332,7 +332,7 @@ const CheckoutPage = () => {
   // Razorpay payment handler (UPI only)
   const handleRazorpayPayment = async (orderData) => {
     // Create payment order using API route (hardcoded keys server-side)
-    const paymentOrder = await fetch('https://bakery-online-payment-server.onrender.com/api/payment-order', {
+    const paymentOrder = await fetch('http://localhost:5001/api/payment-order', {
       method: 'POST',
       body: JSON.stringify({ amount: orderData.total * 100 }),
       headers: { 'Content-Type': 'application/json' }
@@ -347,7 +347,7 @@ const CheckoutPage = () => {
       order_id: paymentOrder.id,
       handler: async function (response) {
         // Payment success, verify on backend
-        const verify = await fetch('https://bakery-online-payment-server.onrender.com/api/payment-verify', {
+        const verify = await fetch('http://localhost:5001/api/payment-verify', {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ...response, orderDocId: orderData.orderDocId }),
