@@ -330,8 +330,13 @@ const CheckoutPage = () => {
   };
 
   // Razorpay payment handler (UPI only)
+
+  
+  
   const handleRazorpayPayment = async (orderData) => {
+   
     // Create payment order using API route (hardcoded keys server-side)
+    
     const paymentOrder = await fetch('https://bakery-online-payment-server.onrender.com/api/payment-order', {
       method: 'POST',
       body: JSON.stringify({ amount: orderData.total * 100 }),
@@ -347,12 +352,15 @@ const CheckoutPage = () => {
       order_id: paymentOrder.id,
       handler: async function (response) {
         // Payment success, verify on backend
+        
         const verify = await fetch('https://bakery-online-payment-server.onrender.com/api/payment-verify', {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ...response, orderDocId: orderData.orderDocId }),
         }).then((res) => res.json());
-
+        toast.loading("Checking Status please wait ...")
+try{
+     
         if (verify.status === "success") {
           // Payment and Order both confirmed
           // Remove cart items
@@ -416,7 +424,7 @@ const CheckoutPage = () => {
           // Unknown or unexpected status, fail-safe handling
           toast.error("Payment verification failed due to unknown error.");
           setShowOrderConfirmed(false);
-        }
+        }}catch{}
         
       },
       modal: {
@@ -439,12 +447,14 @@ const CheckoutPage = () => {
 
     const rzp = new window.Razorpay(options);
     rzp.open();
+  
   };
-
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
     setSubmitting(true);
+    toast.loading("Order Request Sends to backend");
     try {
       // Check item availability first
       const { ok, unavailable } = await checkBakeryStock();
@@ -518,7 +528,7 @@ const CheckoutPage = () => {
             orderItems: orderData.items,
           });
           
-          toast.loading('Order confirmation request sent. Backend is waking up, please wait... give time to wakeup render free service');
+          toast.loading(' Backend is waking up, please wait...');
 
           const response = await fetch('https://bakery-item-decrement-server.onrender.com/api/confirm-order', {
             method: 'POST',

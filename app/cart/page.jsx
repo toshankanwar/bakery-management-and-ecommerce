@@ -189,7 +189,7 @@ const CartPage = () => {
 
   // Update quantity but restrict to available stock
   const updateQuantity = async (itemId, newQuantity) => {
-    if (!user || newQuantity < 1 || newQuantity > 50) return;
+    if (!user || newQuantity < 1 || newQuantity > 20) return;
     const stock = productStock[itemId];
     if (typeof stock === 'number' && newQuantity > stock) {
       toast.error(`Only ${stock} in stock`);
