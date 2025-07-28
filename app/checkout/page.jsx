@@ -454,7 +454,7 @@ try{
     e.preventDefault();
     if (!validateForm()) return;
     setSubmitting(true);
-    toast.loading("Order Request Sends to backend");
+   
     try {
       // Check item availability first
       const { ok, unavailable } = await checkBakeryStock();
