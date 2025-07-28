@@ -666,6 +666,8 @@ const OrdersPage = () => {
     if (!confirm('Are you sure you want to cancel this order?')) return;
 
     setCancelingOrderId(orderId);
+    toast.loading('Order cancellation request sent. Backend is waking up, please wait... give time to wakeup render free service');
+
     try {
       const res = await fetch('https://bakery-cancle-order-server.onrender.com/api/orders/cancel', {
         method: 'POST',
