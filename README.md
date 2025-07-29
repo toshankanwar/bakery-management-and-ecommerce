@@ -8,8 +8,32 @@ This app provides a seamless bakery shopping experience with user authentication
 
 You can try the Toshan Bakery web application live here:
 
-**[🌐 Toshan Bakery Demo](https://bakery.toshankanwar.website)**
-**[🌐 Admin Dashboard Demo](https://admin.bakery.toshankanwar.website/login)**
+**[🌐 Toshan Bakery ](https://bakery.toshankanwar.website)**
+**[🌐 Admin Dashboard ](https://admin.bakery.toshankanwar.website/login)**
+**[🌐 Repo Admin Dashboard ](https://github.com/toshankanwar/Admin-Bakery-Management-and--Ecommerce)**
+**[🌐 Custom email server ](https://mail-server-toshan-bakery.onrender.com)**
+**[🌐 Online Payment Server ](https://bakery-online-payment-server.onrender.com)**
+**[🌐 cancle Order Server ](https://bakery-cancle-order-server.onrender.com)**
+**[🌐 Item decrement Server ](https://bakery-item-decrement-server.onrender.com)**
+
+Repo links for all Backend Servers 
+
+https://github.com/toshankanwar/Bakery-Online--Payment-Server
+https://github.com/toshankanwar/Bakery-Cancle--Order-Server
+https://github.com/toshankanwar/Bakery-Item_decrement-Server
+https://github.com/toshankanwar/Mail-Server-Toshan-bakery
+
+## Screenshots
+
+![image](https://github.com/user-attachments/assets/a75a9205-bce5-48a3-b06c-493e73a787fc)
+![image](https://bakery.toshankanwar.website/payment.png)
+![WhatsApp Image 2025-06-20 at 01 43 34_b63de603](https://github.com/user-attachments/assets/c4afaa5a-9970-49f4-8e51-ea3c5a4dc4a2)
+![WhatsApp Image 2025-06-20 at 01 43 34_7cb46860](https://github.com/user-attachments/assets/9e3305e4-ae20-41bf-a2e7-0cca0c343af8)
+![image](https://github.com/user-attachments/assets/0fd39e32-9779-4538-9179-606fdc7837dd)
+![image](https://github.com/user-attachments/assets/aaf9238f-505a-48f4-8a15-0484b79a4422)
+![image](https://github.com/user-attachments/assets/144cf184-6b84-4e92-af12-5ffeb8561934)
+
+
 
 ## Table of Contents
 
@@ -34,11 +58,12 @@ You can try the Toshan Bakery web application live here:
 
 - **Landing & Home Page:** Hero section, features, categories, special offers, testimonials, contact info.
 - **Product Catalog:** Slug-based product pages, categories, and latest products.
+- **Razorpay Payment:** Pay online using upi, credit cards, Qr code. Robust payment gateway with automatic refund based on if order cancle and payment confirmed  .
 - **Cart & Checkout:** Authenticated cart, address form, delivery options (today/choose date), payment method selection.
 - **Order Placement:** Order summary, order creation, and persistent order history.
 - **Order Management:** View all orders, filter by status, download PDF invoices.
 - **Admin Features:** (in code) Admins can create and manage products & categories.
-- **Automatic Stock Management:** Bakery item quantity reduces automatically after order via backend (Cloud Function).
+- **Automatic Stock Management:** Bakery item quantity reduces automatically after order via backend (Custom servers).
 - **Security:** Role-based access, robust Firestore security rules.
 - **Responsive Design:** Mobile-first, accessible, and visually appealing UI.
 
@@ -47,7 +72,7 @@ You can try the Toshan Bakery web application live here:
 ## Tech Stack
 
 - **Frontend:** Next.js (App Router), React, Tailwind CSS, Framer Motion
-- **Backend:** Firebase Auth, Firestore, Firebase Storage
+- **Backend:** Firebase Auth, Firestore, Firebase Storage ,Render ,Razorpay, Node.js
 - **Deployment:** Vercel / Firebase Hosting
 - **Other:** React Hot Toast, html2pdf.js, Heroicons
 
@@ -80,8 +105,8 @@ You can try the Toshan Bakery web application live here:
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/<your-org-or-user>/toshan-bakery.git
-   cd toshan-bakery
+   git clone https://github.com/toshankanwar/bakery-management-and-ecommerce
+   cd bakery-management-and-ecommerce
    ```
 
 2. **Install dependencies:**
@@ -222,14 +247,6 @@ firebase deploy --only functions
 
 ---
 
-## Screenshots
-
-![image](https://github.com/user-attachments/assets/a75a9205-bce5-48a3-b06c-493e73a787fc)
-![WhatsApp Image 2025-06-20 at 01 43 34_b63de603](https://github.com/user-attachments/assets/c4afaa5a-9970-49f4-8e51-ea3c5a4dc4a2)
-![WhatsApp Image 2025-06-20 at 01 43 34_7cb46860](https://github.com/user-attachments/assets/9e3305e4-ae20-41bf-a2e7-0cca0c343af8)
-![image](https://github.com/user-attachments/assets/0fd39e32-9779-4538-9179-606fdc7837dd)
-![image](https://github.com/user-attachments/assets/aaf9238f-505a-48f4-8a15-0484b79a4422)
-![image](https://github.com/user-attachments/assets/144cf184-6b84-4e92-af12-5ffeb8561934)
 
 
 
