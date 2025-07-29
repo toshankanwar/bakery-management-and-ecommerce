@@ -18,10 +18,10 @@ You can try the Toshan Bakery web application live here:
 
 Repo links for all Backend Servers 
 
-https://github.com/toshankanwar/Bakery-Online--Payment-Server
-https://github.com/toshankanwar/Bakery-Cancle--Order-Server
-https://github.com/toshankanwar/Bakery-Item_decrement-Server
-https://github.com/toshankanwar/Mail-Server-Toshan-bakery
+- https://github.com/toshankanwar/Bakery-Online--Payment-Server
+- https://github.com/toshankanwar/Bakery-Cancle--Order-Server
+- https://github.com/toshankanwar/Bakery-Item_decrement-Server
+- https://github.com/toshankanwar/Mail-Server-Toshan-bakery
 
 ## Screenshots
 
