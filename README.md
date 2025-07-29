@@ -8,13 +8,13 @@ This app provides a seamless bakery shopping experience with user authentication
 
 You can try the Toshan Bakery web application live here:
 
-**[🌐 Toshan Bakery ](https://bakery.toshankanwar.website)**
-**[🌐 Admin Dashboard ](https://admin.bakery.toshankanwar.website/login)**
-**[🌐 Repo Admin Dashboard ](https://github.com/toshankanwar/Admin-Bakery-Management-and--Ecommerce)**
-**[🌐 Custom email server ](https://mail-server-toshan-bakery.onrender.com)**
-**[🌐 Online Payment Server ](https://bakery-online-payment-server.onrender.com)**
-**[🌐 cancle Order Server ](https://bakery-cancle-order-server.onrender.com)**
-**[🌐 Item decrement Server ](https://bakery-item-decrement-server.onrender.com)**
+- **[🌐 Toshan Bakery ](https://bakery.toshankanwar.website)**
+- **[🌐 Admin Dashboard ](https://admin.bakery.toshankanwar.website/login)**
+- **[🌐 Repo Admin Dashboard ](https://github.com/toshankanwar/Admin-Bakery-Management-and--Ecommerce)**
+- **[🌐 Custom email server ](https://mail-server-toshan-bakery.onrender.com)**
+- **[🌐 Online Payment Server ](https://bakery-online-payment-server.onrender.com)**
+- **[🌐 cancle Order Server ](https://bakery-cancle-order-server.onrender.com)**
+- **[🌐 Item decrement Server ](https://bakery-item-decrement-server.onrender.com)**
 
 Repo links for all Backend Servers 
 
