@@ -11,7 +11,8 @@ import {
   query, 
   where, 
   orderBy, 
-  getDocs, 
+  getDocs,
+  addDoc, 
   limit,
 } from 'firebase/firestore';
 import { toast } from 'react-hot-toast';
