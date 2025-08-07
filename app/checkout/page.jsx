@@ -530,7 +530,7 @@ try{
           
           toast.loading(' Backend is waking up, please wait...');
 
-          const response = await fetch('https://bakery-item-decrement-server.onrender.com/api/confirm-order', {
+          const response = await fetch('https://cod-server-ku1n.onrender.com/api/confirm-order', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

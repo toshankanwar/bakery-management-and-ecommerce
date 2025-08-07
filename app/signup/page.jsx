@@ -45,50 +45,54 @@ const SignUpPage = () => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
+  
     // Validate form
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       setLoading(false);
       return;
     }
-
+  
     if (formData.password.length < 6) {
       setError('Password should be at least 6 characters long');
       setLoading(false);
       return;
     }
-
+  
     try {
       const { user, error } = await createUserWithRole(
         formData.email,
         formData.password,
         formData.displayName
       );
-
+  
       if (error) {
         setError(error);
       } else {
-        // Send welcome email (do not block redirect on success/fail)
-        sendWelcomeEmail(formData.email, formData.displayName);
+        // Redirect first
         router.push('/');
+  
+        // Send welcome email asynchronously; do not await so it doesn't block redirect
+        sendWelcomeEmail(formData.email, formData.displayName)
+          .catch(e => console.error('Failed to send welcome email', e));
       }
     } catch (err) {
       console.error('Error during sign up:', {
         error: err.message,
         timestamp: new Date().toISOString(),
-        user: 'Kala-bot-apk'
+        user: 'Kala-bot-apk',
       });
       setError('An error occurred during sign up');
     } finally {
       setLoading(false);
     }
   };
-
+  
+  
   const handleGoogleSignIn = async () => {
     setError('');
     setLoading(true);
-
+  
     try {
       const { user, error } = await signInWithGoogle();
       if (error) {
@@ -96,21 +100,26 @@ const SignUpPage = () => {
       } else {
         // Google sign-in doesn't always provide displayName immediately, use fallback if needed
         const displayName = user?.displayName || 'Baker';
-        sendWelcomeEmail(user.email, displayName);
+  
+        // Redirect immediately
         router.push('/');
+  
+        // Send welcome email asynchronously; do not await it to avoid blocking redirect
+        sendWelcomeEmail(user.email, displayName)
+          .catch(e => console.error('Failed to send welcome email', e));
       }
     } catch (err) {
       console.error('Error during Google sign in:', {
         error: err.message,
         timestamp: new Date().toISOString(),
-        user: 'Kala-bot-apk'
+        user: 'Kala-bot-apk',
       });
       setError('An error occurred during Google sign in');
     } finally {
       setLoading(false);
     }
   };
-
+  
   return (
     <div className="max-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <motion.div

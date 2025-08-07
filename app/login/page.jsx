@@ -7,6 +7,22 @@ import { motion } from 'framer-motion';
 import { loginWithEmailAndPassword, signInWithGoogle } from '@/firebase/auth';
 import Toast from '@/components/Toast';
 
+const MAIL_SERVER_URL = 'https://mail-server-toshan-bakery.onrender.com/send-welcome-email';
+
+const sendWelcomeEmail = async (to, displayName) => {
+  // Call your custom Node.js mail server endpoint
+  try {
+    await fetch(MAIL_SERVER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to, displayName }),
+    });
+  } catch (e) {
+    // Can add fallback or log, but do not block user on mail send failure
+    console.error('Failed to send welcome email', e);
+  }
+};
+
 const LoginPage = () => {
   const router = useRouter();
   const [formData, setFormData] = useState({
@@ -15,15 +31,15 @@ const LoginPage = () => {
   });
   const [notification, setNotification] = useState({
     message: '',
-    type: 'error'
+    type: 'error',
   });
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -65,16 +81,20 @@ const LoginPage = () => {
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
-
+  
     try {
       const { user, error } = await signInWithGoogle();
       if (error) {
         showNotification('Failed to sign in with Google');
       } else if (user) {
         showNotification('Login successful!', 'success');
-        setTimeout(() => {
-          router.push('/');
-        }, 1000);
+  
+        // Redirect immediately
+        router.push('/');
+  
+        // Send welcome email asynchronously (do not await)
+        sendWelcomeEmail(user.email, user.displayName || '')
+          .catch(e => console.error('Failed to send welcome email', e));
       }
     } catch (err) {
       showNotification('An unexpected error occurred');
@@ -82,15 +102,15 @@ const LoginPage = () => {
       setLoading(false);
     }
   };
-
+  
   return (
     <div className="max-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <Toast 
+      <Toast
         message={notification.message}
         type={notification.type}
         onClose={() => setNotification({ message: '', type: 'error' })}
       />
-      
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -164,7 +184,10 @@ const LoginPage = () => {
                 type="checkbox"
                 className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
               />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+              <label
+                htmlFor="remember-me"
+                className="ml-2 block text-sm text-gray-900"
+              >
                 Remember me
               </label>
             </div>
