@@ -96,47 +96,57 @@ const MenuDrawer = ({ isOpen, onClose, user }) => {
 
             {/* User Section */}
             <div className="absolute bottom-0 left-0 right-0 border-t border-gray-200 p-4">
-              {user ? (
-                <div className="flex flex-col space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                      <UserCircleIcon className="h-6 w-6 text-green-600" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">{user.email}</p>
-                      <p className="text-sm text-gray-500">Logged in</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => {
-                      try {
-                        logoutUser();
-                        onClose();
-                      } catch (error) {
-                        console.error('Error logging out:', {
-                          error: error.message,
-                          timestamp: '2025-06-15 06:07:22',
-                          user: 'Kala-bot-apk'
-                        });
-                      }
-                    }}
-                    className="flex items-center space-x-2 text-red-600 hover:text-red-700 transition-colors"
-                  >
-                    <ArrowLeftOnRectangleIcon className="h-5 w-5" />
-                    <span>Sign Out</span>
-                  </button>
-                </div>
-              ) : (
-                <Link
-                  href="/login"
-                  onClick={onClose}
-                  className="flex items-center justify-center space-x-2 w-full py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  <ArrowRightOnRectangleIcon className="h-5 w-5" />
-                  <span>Sign In</span>
-                </Link>
-              )}
-            </div>
+  {user ? (
+    <div className="flex flex-col space-y-4">
+      <div className="flex items-center space-x-3">
+        <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center overflow-hidden">
+          <img
+            src={user.photoURL || "/default-ProfileButton.png"} // show user photo if exists else default
+            alt={user.displayName || "Default Avatar"}
+            className="h-10 w-10 object-cover rounded-full" // fixed typo here
+            onError={(e) => {
+              e.currentTarget.onerror = null; // prevent infinite fallback loop
+              e.currentTarget.src = "/default-ProfileButton.png"; // fallback to default if URL is broken
+            }}
+          />
+        </div>
+        <div>
+          <p className="font-medium text-gray-900">{user.email}</p>
+          <p className="text-sm text-gray-500">Logged in</p>
+        </div>
+      </div>
+      <button
+        onClick={() => {
+          try {
+            logoutUser();
+            onClose();
+          } catch (error) {
+            console.error("Error logging out:", {
+              error: error.message,
+              timestamp: "2025-06-15 06:07:22",
+              user: "Kala-bot-apk",
+            });
+          }
+        }}
+        className="flex items-center space-x-2 text-red-600 hover:text-red-700 transition-colors"
+      >
+        <ArrowLeftOnRectangleIcon className="h-5 w-5" />
+        <span>Sign Out</span>
+      </button>
+    </div>
+  ) : (
+    <Link
+      href="/login"
+      onClick={onClose}
+      className="flex items-center justify-center space-x-2 w-full py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+    >
+      <ArrowRightOnRectangleIcon className="h-5 w-5" />
+      <span>Sign In</span>
+    </Link>
+  )}
+</div>
+
+
           </motion.div>
         </>
       )}
@@ -182,21 +192,35 @@ const AccountDrawer = ({ isOpen, onClose, user }) => {
               </div>
 
               {user && (
-                <div className="p-4 border-b border-gray-200">
-                  <div className="flex items-center space-x-3">
-                    <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-                      {user.photoURL ? (
-                        <img src={user.photoURL} alt="" className="h-12 w-12 rounded-full" />
-                      ) : (
-                        <UserCircleIcon className="h-8 w-8 text-green-600" />
-                      )}
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">{user.email}</p>
-                      <p className="text-sm text-gray-500">Logged in</p>
-                    </div>
-                  </div>
-                </div>
+               <div className="p-4 border-b border-gray-200">
+               <div className="flex items-center space-x-3">
+                 {/* Avatar container with flex-shrink-0 to prevent shrinking */}
+                 <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                   {user.photoURL ? (
+                     <img
+                       src={user.photoURL}
+                       alt="User Avatar"
+                       className="h-12 w-12 rounded-full object-cover"
+                       onError={e => {
+                         e.currentTarget.onerror = null; // prevent infinite fallback loop
+                         e.currentTarget.src = "/default-avatar.png"; // fallback image in public folder
+                       }}
+                     />
+                   ) : (
+                     <img
+                       src="/default-avatar.png"
+                       alt="Default Avatar"
+                       className="h-12 w-12 rounded-full object-cover"
+                     />
+                   )}
+                 </div>
+                 <div className="min-w-0">
+                   <p className="font-medium text-gray-900 truncate">{user.email}</p>
+                   <p className="text-sm text-gray-500">Logged in</p>
+                 </div>
+               </div>
+             </div>
+             
               )}
 
               <div className="flex-1 overflow-y-auto">

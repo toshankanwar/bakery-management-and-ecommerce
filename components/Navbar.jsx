@@ -206,7 +206,11 @@ const Navbar = () => {
           className="h-8 w-8 rounded-full"
         />
       ) : (
-        <UserCircleIcon className="h-8 w-8 text-gray-600" />
+        <img
+          src="/default-ProfileButton.png"
+          alt="Default Avatar"
+          className="h-8 w-8 rounded-full object-cover"
+        />
       )}
     </motion.button>
   );

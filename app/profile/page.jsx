@@ -97,7 +97,7 @@ export default function ProfilePage() {
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         const userData = userDoc.exists() ? userDoc.data() : {};
         const profileInfo = {
-          displayName: user.displayName || '',
+          displayName: userData.displayName || '',
           email: user.email || '',
           mobile: userData.mobile || '',
           state: userData.state || '',

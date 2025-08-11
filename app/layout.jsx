@@ -59,6 +59,7 @@ function MetadataHead({ title }) {
       <meta property="og:title" content={title} />
       <meta property="og:site_name" content="Toshan Bakery"/>
       <meta property="og:description" content="Order fresh cakes, pastries, and breads from Toshan Bakery. Delicious treats for every occasion. Delivery and pickup available." />
+      <meta property="og:image" content="https://bakery.toshankanwar.website/toshan-profile.jpg" />
       <meta property="og:type" content="website" />
       <meta property="og:url" content="https://bakery.toshankanwar.website/"/>
       <meta name="viewport" content="width=device-width, initial-scale=1" />
