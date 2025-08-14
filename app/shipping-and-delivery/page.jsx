@@ -46,10 +46,10 @@ export default function ShippingAndDelivery() {
         <p className="text-gray-700 mb-4 leading-relaxed">
           You can contact us at:{' '}
           <a
-            href="mailto:contact@toshanbakery.website"
+            href="mailto:contact@toshankanwar.website"
             className="text-green-600 underline hover:text-green-700"
           >
-            contact@toshanbakery.website
+            contact@toshankanwar.website
           </a>
           {' '}
           and we will be happy to assist you.

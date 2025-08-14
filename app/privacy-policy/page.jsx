@@ -83,8 +83,8 @@ export default function PrivacyPolicy() {
             <dt className="font-medium">Who do I contact with privacy questions?</dt>
             <dd className="mt-1">
               Please email us at{' '}
-              <a href="mailto:contact@toshanbakery.website" className="text-green-600 underline hover:text-green-700">
-                contact@toshanbakery.website
+              <a href="mailto:contact@toshankanwar.website" className="text-green-600 underline hover:text-green-700">
+                contact@toshankanwar.website
               </a>
               {' '}for any questions or concerns regarding your privacy.
             </dd>

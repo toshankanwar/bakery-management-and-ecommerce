@@ -74,15 +74,15 @@ export default function TermsAndConditions() {
       <p className="text-gray-700 text-base mb-6">
         For any questions about our terms or policies, please contact us at{' '}
         <a
-          href="mailto:contact@toshanbakery.website"
+          href="mailto:contact@toshankanwar.website"
           className="text-green-600 underline hover:text-green-700"
         >
-          contact@toshanbakery.website
+          contact@toshankanwar.website
         </a>.
       </p>
 
       <p className="text-sm text-gray-500 italic">
-        Last updated: July 2025
+        Last updated: Aug 2025
       </p>
     </div>
   );

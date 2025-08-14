@@ -93,10 +93,10 @@ export default function CancellationAndRefund() {
             <dd className="mt-1">
               You can reach our support team anytime at{' '}
               <a
-                href="mailto:contact@toshanbakery.website"
+                href="mailto:contact@toshankanwar.website"
                 className="text-green-600 underline hover:text-green-700"
               >
-                contact@toshanbakery.website
+                contact@toshankanwar.website
               </a>
               .
             </dd>

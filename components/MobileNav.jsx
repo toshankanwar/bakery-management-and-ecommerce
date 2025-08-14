@@ -98,23 +98,26 @@ const MenuDrawer = ({ isOpen, onClose, user }) => {
             <div className="absolute bottom-0 left-0 right-0 border-t border-gray-200 p-4">
   {user ? (
     <div className="flex flex-col space-y-4">
-      <div className="flex items-center space-x-3">
-        <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center overflow-hidden">
+      <div className="flex items-center space-x-3 min-w-0"> {/* prevent overflow issues */}
+        <div className="h-10 w-10 rounded-full bg-green-100 flex-shrink-0 flex items-center justify-center overflow-hidden">
           <img
-            src={user.photoURL || "/default-ProfileButton.png"} // show user photo if exists else default
+            src={user.photoURL || "/default-ProfileButton.png"}
             alt={user.displayName || "Default Avatar"}
-            className="h-10 w-10 object-cover rounded-full" // fixed typo here
+            className="h-10 w-10 object-cover rounded-full"
             onError={(e) => {
-              e.currentTarget.onerror = null; // prevent infinite fallback loop
-              e.currentTarget.src = "/default-ProfileButton.png"; // fallback to default if URL is broken
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = "/default-ProfileButton.png";
             }}
           />
         </div>
-        <div>
-          <p className="font-medium text-gray-900">{user.email}</p>
-          <p className="text-sm text-gray-500">Logged in</p>
+        <div className="min-w-0"> {/* enables text truncation */}
+          <p className="font-medium text-gray-900 truncate max-w-[140px]">
+            {user.email}
+          </p>
+          <p className="text-sm text-gray-500 truncate">Logged in</p>
         </div>
       </div>
+
       <button
         onClick={() => {
           try {
@@ -145,6 +148,7 @@ const MenuDrawer = ({ isOpen, onClose, user }) => {
     </Link>
   )}
 </div>
+
 
 
           </motion.div>
